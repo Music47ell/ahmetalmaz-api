@@ -18,6 +18,15 @@ import { getTopLanguages } from '../src/codestats/topLanguages.js'
 
 const app = new Hono()
 
+app.use(
+  '*',
+  cors({
+    origin: process.env.DOMAIN,
+    allowMethods: ['GET', 'POST', 'OPTIONS'],
+    allowHeaders: ['Content-Type', 'Authorization'],
+  })
+)
+
 app.get('/', async (c) => c.text(getFullMessage()))
 
 app.get('/listenbrainz/stats', async (c) => c.json(await getListenBrainzStats()))
