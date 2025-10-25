@@ -28,7 +28,7 @@ export const getWatchedShows = async (): Promise<Show[]> => {
       if (!data.poster_path || !data.name) return null
       return {
         title: data.name,
-        poster: `https://image.tmdb.org/t/p/original${data.poster_path}`,
+        poster: `https://image.tmdb.org/t/p/w500${data.poster_path}`,
         url: `https://www.themoviedb.org/tv/${tmdbId}`,
       }
     }),

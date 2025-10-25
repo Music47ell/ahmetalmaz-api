@@ -28,7 +28,7 @@ export const getWatchedMovies = async (): Promise<Movie[]> => {
       if (!data.poster_path || !data.title) return null
       return {
         title: data.title,
-        poster: `https://image.tmdb.org/t/p/original${data.poster_path}`,
+        poster: `https://image.tmdb.org/t/p/w500${data.poster_path}`,
         url: `https://www.themoviedb.org/movie/${tmdbId}`,
       }
     }),
