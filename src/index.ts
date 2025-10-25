@@ -18,14 +18,20 @@ import { getTopLanguages } from '../src/codestats/topLanguages.js'
 
 const app = new Hono()
 
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || '').split(',')
+
 app.use(
   '*',
   cors({
-    origin: process.env.DOMAIN,
+    origin: (origin) => {
+      // If origin is in the list, allow it; otherwise fallback to first domain
+      return origin && allowedOrigins.includes(origin) ? origin : allowedOrigins[0]
+    },
     allowMethods: ['GET', 'POST', 'OPTIONS'],
-    allowHeaders: ['Content-Type', 'Authorization'],
+    allowHeaders: ['Content-Type', 'Authorization']
   })
 )
+
 
 app.get('/', async (c) => c.text(getFullMessage()))
 
