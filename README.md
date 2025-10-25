@@ -49,6 +49,7 @@ Create a `.env` file in the project root:
 ```env
 USERNAME=<your username>
 TRAKT_CLIENT_ID=<your trakt api client id>
+WRANGLER_SEND_METRICS=false
 ```
 
 ---
