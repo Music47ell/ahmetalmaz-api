@@ -1,4 +1,5 @@
 import { Hono } from 'hono'
+import { cors } from 'hono/cors'
 
 import { getFullMessage } from '../src/curl-card/index.js'
 
