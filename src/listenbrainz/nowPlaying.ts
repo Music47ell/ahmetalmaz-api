@@ -20,7 +20,7 @@ export const getNowPlaying = async () => {
         t.artist.name.toLowerCase() === trackInfo.artist.toLowerCase()
       )
       if (match) {
-        trackInfo.image = match.album.cover_xl
+        trackInfo.image = match.album.cover_medium
         trackInfo.preview = match.preview
       }
     }

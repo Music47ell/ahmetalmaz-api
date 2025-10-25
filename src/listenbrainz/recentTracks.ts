@@ -13,7 +13,7 @@ export const getRecentTracks = async (): Promise<TrackInfo[]> => {
       const mbidMapping = meta.mbid_mapping || {}
 
       return {
-        artist: mbidMapping?.artists?.[0]?.artist_credit_name || meta.artist_name,
+        artist: mbidMapping.artists?.[0]?.artist_credit_name || meta.artist_name,
         title: meta.track_name,
         image: '',
         preview: '',
@@ -26,54 +26,42 @@ export const getRecentTracks = async (): Promise<TrackInfo[]> => {
 
     await Promise.all(
       tracks.map(async (track) => {
+        // 1. Try Cover Art Archive
         if (track.caa_id && track.caa_release_mbid) {
           try {
-            const coverUrl = `https://coverartarchive.org/release/${track.caa_release_mbid}/${track.caa_id}.jpg`
-            const head = await fetch(coverUrl, { method: 'HEAD' })
-            track.image = head.ok
-              ? coverUrl
-              : `https://coverartarchive.org/release/${track.caa_release_mbid}/front`
+            const metadataUrl = `https://coverartarchive.org/release/${track.caa_release_mbid}`
+            const resp = await fetch(metadataUrl)
+            if (resp.ok) {
+              const data = await resp.json()
+              const imageObj = data.images?.find((img: any) => img.id === track.caa_id)
+              track.image = imageObj?.thumbnails?.large || imageObj?.image || ''
+            }
           } catch (err) {
             console.warn(`CAA fetch failed for ${track.artist} - ${track.title}:`, err)
           }
         } else if (track.release_mbid) {
-          track.image = `https://coverartarchive.org/release/${track.release_mbid}/front`
+          track.image = `https://coverartarchive.org/release/${track.release_mbid}/front-500`
         }
 
-        if (!track.image) {
+        // 2. Fallback to Deezer for image + preview
+        if (!track.image || !track.preview) {
           try {
-            const resp = await fetch(
-              `https://api.deezer.com/search/track?q=${encodeURIComponent(`${track.title} ${track.artist}`)}`
-            )
+            const query = encodeURIComponent(`${track.title} ${track.artist}`)
+            const resp = await fetch(`https://api.deezer.com/search/track?q=${query}&limit=5`)
             const data = await resp.json()
             if (data.data?.length > 0) {
               const match = data.data.find(
                 (t: any) =>
                   normalize(t.artist.name) === normalize(track.artist) &&
                   normalize(t.title) === normalize(track.title)
-              )
-              if (match) track.image = match.album.cover_xl
+              ) || data.data[0]
+
+              track.image = track.image || match.album?.cover_medium || ''
+              track.preview = track.preview || match.preview || ''
             }
           } catch (err) {
-            console.warn(`Deezer image fetch failed for ${track.artist} - ${track.title}:`, err)
+            console.warn(`Deezer fetch failed for ${track.artist} - ${track.title}:`, err)
           }
-        }
-
-        try {
-          const resp = await fetch(
-            `https://api.deezer.com/search/track?q=${encodeURIComponent(`${track.title} ${track.artist}`)}&limit=1`
-          )
-          const data = await resp.json()
-          if (data.data?.length > 0) {
-            const exact = data.data.find(
-              (t: any) =>
-                normalize(t.artist.name) === normalize(track.artist) &&
-                normalize(t.title) === normalize(track.title)
-            )
-            track.preview = exact?.preview || data.data[0].preview || ''
-          }
-        } catch (err) {
-          console.warn(`Deezer preview fetch failed for ${track.artist} - ${track.title}:`, err)
         }
 
         if (!track.image) {

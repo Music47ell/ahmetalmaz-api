@@ -1,6 +1,8 @@
 import { USERNAME, logError } from '../utils/helpers.js'
 import type { AlbumInfo } from '../types.js'
 
+const PLACEHOLDER_IMAGE = 'https://cdn-images.dzcdn.net/images/cover//250x250-000000-80-0-0.jpg'
+
 export const getTopAlbums = async (): Promise<AlbumInfo[]> => {
   try {
     const res = await fetch(
@@ -24,23 +26,34 @@ export const getTopAlbums = async (): Promise<AlbumInfo[]> => {
           image: '',
         }
 
-        if (album.caa_id && album.caa_release_mbid) {
+        if (album.caa_release_mbid) {
           try {
-            const coverUrl = `https://coverartarchive.org/release/${album.caa_release_mbid}/${album.caa_id}.jpg`
-            const head = await fetch(coverUrl, { method: 'HEAD' })
-            album.image = head.ok
-              ? coverUrl
-              : `https://coverartarchive.org/release/${album.caa_release_mbid}/front`
+            const metadataUrl = `https://coverartarchive.org/release/${album.caa_release_mbid}`
+            const resp = await fetch(metadataUrl)
+            if (resp.ok) {
+              const data = await resp.json()
+              let imageObj = album.caa_id
+                ? data.images?.find((img: any) => img.id === album.caa_id)
+                : data.images?.[0]
+
+              album.image =
+                imageObj?.thumbnails?.large ||
+                imageObj?.thumbnails?.small ||
+                imageObj?.image ||
+                `https://coverartarchive.org/release/${album.caa_release_mbid}/front-500`
+            }
           } catch (err) {
             console.warn(`CAA fetch failed for ${album.title}:`, err)
-            album.image = `https://coverartarchive.org/release/${album.caa_release_mbid}/front`
+            album.image = `https://coverartarchive.org/release/${album.caa_release_mbid}/front-500`
           }
         } else if (album.release_mbid) {
-          album.image = `https://coverartarchive.org/release/${album.release_mbid}/front`
+          album.image = `https://coverartarchive.org/release/${album.release_mbid}/front-500`
         }
 
+        // FINAL FALLBACK: placeholder
         if (!album.image) {
           console.warn(`No cover art found for: ${album.artist} - ${album.title}`)
+          album.image = PLACEHOLDER_IMAGE
         }
 
         return album
