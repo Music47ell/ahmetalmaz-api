@@ -31,6 +31,7 @@ export const getRecentTracks = async (): Promise<TrackInfo[]> => {
           try {
             const metadataUrl = `${API_URL}/caa/${track.caa_release_mbid}`
             const resp = await fetch(metadataUrl)
+            console.log(resp)
             if (resp.ok) {
               const data = await resp.json()
               const imageObj = data.images?.find((img: any) => img.id === track.caa_id)

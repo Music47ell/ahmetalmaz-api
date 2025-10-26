@@ -37,7 +37,7 @@ app.use(
 
 app.get('/', async (c) => c.text(getFullMessage()))
 
-app.route('/api/caa', createCaaProxyRoute())
+app.route('/caa', createCaaProxyRoute())
 app.get('/listenbrainz/stats', async (c) => c.json(await getListenBrainzStats()))
 app.get('/listenbrainz/now-playing', async (c) => c.json(await getNowPlaying()))
 app.get('/listenbrainz/recent-tracks', async (c) => c.json(await getRecentTracks()))
