@@ -27,27 +27,9 @@ export const getTopAlbums = async (): Promise<AlbumInfo[]> => {
         }
 
         if (album.caa_release_mbid) {
-          try {
-            const metadataUrl = `${API_URL}/caa/${album.caa_release_mbid}`
-            const resp = await fetch(metadataUrl)
-            if (resp.ok) {
-              const data = await resp.json()
-              let imageObj = album.caa_id
-                ? data.images?.find((img: any) => img.id === album.caa_id)
-                : data.images?.[0]
-
-              album.image =
-                imageObj?.thumbnails?.large ||
-                imageObj?.thumbnails?.small ||
-                imageObj?.image ||
-                `${API_URL}/caa/${album.caa_release_mbid}/front-500`
-            }
-          } catch (err) {
-            console.warn(`CAA fetch failed for ${album.title}:`, err)
-            album.image = `${API_URL}/caa/${album.caa_release_mbid}/front-500`
-          }
+          album.image = `${API_URL}/caa/${album.caa_release_mbid}?size=500`
         } else if (album.release_mbid) {
-          album.image = `${API_URL}/caa/${album.release_mbid}/front-500`
+          album.image = `${API_URL}/caa${album.release_mbid}?size=500`
         }
 
         // FINAL FALLBACK: placeholder

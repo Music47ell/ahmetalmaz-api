@@ -27,21 +27,13 @@ export const getRecentTracks = async (): Promise<TrackInfo[]> => {
     await Promise.all(
       tracks.map(async (track) => {
         // 1. Try Cover Art Archive
-        if (track.caa_id && track.caa_release_mbid) {
+        if (track.caa_release_mbid) {
           try {
-            const metadataUrl = `${API_URL}/caa/${track.caa_release_mbid}`
-            const resp = await fetch(metadataUrl)
-            console.log(resp)
-            if (resp.ok) {
-              const data = await resp.json()
-              const imageObj = data.images?.find((img: any) => img.id === track.caa_id)
-              track.image = imageObj?.thumbnails?.large || imageObj?.image || ''
-            }
+            // If you have a specific image ID, you could extend the proxy to fetch that
+            track.image = `${API_URL}/caa/${track.caa_release_mbid}?size=500`
           } catch (err) {
-            console.warn(`CAA fetch failed for ${track.artist} - ${track.title}:`, err)
+            console.warn(`CAA proxy failed for ${track.artist} - ${track.title}:`, err)
           }
-        } else if (track.release_mbid) {
-          track.image = `${API_URL}/caa/${track.release_mbid}/front-500`
         }
 
         // 2. Fallback to Deezer for image + preview
