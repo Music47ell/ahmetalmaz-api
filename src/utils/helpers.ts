@@ -1,6 +1,8 @@
+export const API_URL = process.env.API_URL
 export const USERNAME = process.env.USERNAME
 export const TRAKT_CLIENT_ID = process.env.TRAKT_CLIENT_ID
 
+if (!API_URL) throw new Error('API_URL environment variable is not defined.')
 if (!USERNAME) throw new Error('USERNAME environment variable is not defined.')
 if (!TRAKT_CLIENT_ID) throw new Error('TRAKT_CLIENT_ID environment variable is not defined.')
 

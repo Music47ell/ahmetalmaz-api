@@ -1,4 +1,4 @@
-import { USERNAME, logError, normalize } from '../utils/helpers.js'
+import { API_URL, USERNAME, logError, normalize } from '../utils/helpers.js'
 import type { TrackInfo } from '../types.js'
 
 export const getRecentTracks = async (): Promise<TrackInfo[]> => {
@@ -29,7 +29,7 @@ export const getRecentTracks = async (): Promise<TrackInfo[]> => {
         // 1. Try Cover Art Archive
         if (track.caa_id && track.caa_release_mbid) {
           try {
-            const metadataUrl = `https://coverartarchive.org/release/${track.caa_release_mbid}`
+            const metadataUrl = `${API_URL}/caa/${track.caa_release_mbid}`
             const resp = await fetch(metadataUrl)
             if (resp.ok) {
               const data = await resp.json()
@@ -40,7 +40,7 @@ export const getRecentTracks = async (): Promise<TrackInfo[]> => {
             console.warn(`CAA fetch failed for ${track.artist} - ${track.title}:`, err)
           }
         } else if (track.release_mbid) {
-          track.image = `https://coverartarchive.org/release/${track.release_mbid}/front-500`
+          track.image = `${API_URL}/caa/${track.release_mbid}/front-500`
         }
 
         // 2. Fallback to Deezer for image + preview
