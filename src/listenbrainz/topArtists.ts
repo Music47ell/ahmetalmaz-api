@@ -1,4 +1,4 @@
-import { USERNAME, logError, normalize } from '../utils/helpers.js'
+import { API_URL, USERNAME, logError, normalize } from '../utils/helpers.js'
 import type { ArtistInfo } from '../types.js'
 
 const PLACEHOLDER_IMAGE = 'https://cdn-images.dzcdn.net/images/artist//250x250-000000-80-0-0.jpg'
@@ -25,38 +25,33 @@ export const getTopArtists = async (): Promise<ArtistInfo[]> => {
 
         try {
           const query = encodeURIComponent(artist.name)
-          const resp = await fetch(`https://api.deezer.com/search/artist?q=${query}&limit=5`)
-          const data = await resp.json()
-          if (data.data?.length > 0) {
-            const match = data.data.find(
-              (d: any) => normalize(d.name) === normalize(artist.name)
-            ) || data.data[0]
 
-            artist.image = match.picture_medium || ''
+          // --- Use proxy for Deezer artist search ---
+          const resp = await fetch(`${API_URL}/caa/none?deezerType=artist&q=${query}`)
+          if (resp.ok) {
+            const data = await resp.json()
+            artist.image = data.image || ''
+          } else {
+            console.warn(`Proxy artist lookup failed for ${artist.name}`)
           }
         } catch (err) {
-          console.warn(`Deezer artist search failed for ${artist.name}:`, err)
+          console.warn(`Proxy artist search failed for ${artist.name}:`, err)
         }
 
-        // Fallback to album cover if artist picture not found
+        // Fallback: use Deezer album via proxy
         if (!artist.image) {
           try {
             const query = encodeURIComponent(artist.name)
-            const resp = await fetch(`https://api.deezer.com/search/album?q=${query}&limit=5`)
-            const data = await resp.json()
-            if (data.data?.length > 0) {
-              const match = data.data.find(
-                (album: any) => normalize(album.artist.name) === normalize(artist.name)
-              ) || data.data[0]
-
-              artist.image = match.cover_medium || ''
+            const resp = await fetch(`${API_URL}/caa/none?deezerType=album&q=${query}`)
+            if (resp.ok) {
+              const data = await resp.json()
+              artist.image = data.image || ''
             }
           } catch (err) {
-            console.warn(`Deezer album search failed for ${artist.name}:`, err)
+            console.warn(`Proxy album search failed for ${artist.name}:`, err)
           }
         }
 
-        // Final fallback: placeholder
         if (!artist.image) {
           console.warn(`No image found for artist: ${artist.name}`)
           artist.image = PLACEHOLDER_IMAGE
