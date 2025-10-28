@@ -1,4 +1,4 @@
-import { API_URL, USERNAME, logError, normalize } from '../utils/helpers.js'
+import { API_URL, USERNAME, logError } from '../utils/helpers.js'
 import type { ArtistInfo } from '../types.js'
 
 const PLACEHOLDER_IMAGE = 'https://cdn-images.dzcdn.net/images/artist//250x250-000000-80-0-0.jpg'
@@ -24,34 +24,21 @@ export const getTopArtists = async (): Promise<ArtistInfo[]> => {
         }
 
         try {
-          const query = encodeURIComponent(artist.name)
+          // Ask our Hono Deezer proxy for the artist picture
+          const deezerUrl = `${API_URL}/deezer?type=artist&q=${encodeURIComponent(artist.name)}`
+          const coverRes = await fetch(deezerUrl)
 
-          // --- Use proxy for Deezer artist search ---
-          const resp = await fetch(`${API_URL}/caa/none?deezerType=artist&q=${query}`)
-          if (resp.ok) {
-            const data = await resp.json()
-            artist.image = data.image || ''
+          if (coverRes.ok) {
+            // The proxy returns the image stream, so just use its URL
+            artist.image = deezerUrl
           } else {
-            console.warn(`Proxy artist lookup failed for ${artist.name}`)
+            logError(`Deezer proxy returned ${coverRes.status} for ${artist.name}`)
           }
         } catch (err) {
-          console.warn(`Proxy artist search failed for ${artist.name}:`, err)
+          logError(`Deezer proxy fetch failed for ${artist.name}`, err)
         }
 
-        // Fallback: use Deezer album via proxy
-        if (!artist.image) {
-          try {
-            const query = encodeURIComponent(artist.name)
-            const resp = await fetch(`${API_URL}/caa/none?deezerType=album&q=${query}`)
-            if (resp.ok) {
-              const data = await resp.json()
-              artist.image = data.image || ''
-            }
-          } catch (err) {
-            console.warn(`Proxy album search failed for ${artist.name}:`, err)
-          }
-        }
-
+        // Final fallback: placeholder
         if (!artist.image) {
           console.warn(`No image found for artist: ${artist.name}`)
           artist.image = PLACEHOLDER_IMAGE

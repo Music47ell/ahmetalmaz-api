@@ -26,10 +26,22 @@ export const getTopAlbums = async (): Promise<AlbumInfo[]> => {
           image: '',
         }
 
-        if (album.caa_release_mbid) {
-          album.image = `${API_URL}/caa/${album.caa_release_mbid}?size=500`
-        } else if (album.release_mbid) {
-          album.image = `${API_URL}/caa${album.release_mbid}?size=500`
+        // Prefer title + artist for best Deezer search accuracy
+        const query = `${album.title} ${album.artist}`.trim()
+
+        try {
+          // Ask our Hono Deezer proxy for the album cover
+          const deezerUrl = `${API_URL}/deezer?type=album&q=${encodeURIComponent(query)}`
+          const coverRes = await fetch(deezerUrl)
+
+          if (coverRes.ok) {
+            // The proxy returns the image itself, not JSON, so just use the same URL
+            album.image = deezerUrl
+          } else {
+            logError(`Deezer proxy returned ${coverRes.status} for ${query}`)
+          }
+        } catch (err) {
+          logError(`Failed Deezer fetch for ${query}`, err)
         }
 
         // FINAL FALLBACK: placeholder
