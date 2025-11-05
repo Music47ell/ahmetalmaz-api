@@ -8,7 +8,6 @@ import { getNowPlaying } from '../src/listenbrainz/nowPlaying.js'
 import { getRecentTracks } from '../src/listenbrainz/recentTracks.js'
 import { getTopAlbums } from '../src/listenbrainz/topAlbums.js'
 import { getTopArtists } from '../src/listenbrainz/topArtists.js'
-import { createDeezerProxyRoute } from '../src/listenbrainz/deezerProxy.js'
 
 import { getTraktStats } from '../src/trakt/stats.js'
 import { getNowWatching } from '../src/trakt/nowWatching.js'
@@ -37,7 +36,6 @@ app.use(
 
 app.get('/', async (c) => c.text(getFullMessage()))
 
-app.route('/deezer', createDeezerProxyRoute())
 app.get('/listenbrainz/stats', async (c) => c.json(await getListenBrainzStats()))
 app.get('/listenbrainz/now-playing', async (c) => c.json(await getNowPlaying()))
 app.get('/listenbrainz/recent-tracks', async (c) => c.json(await getRecentTracks()))

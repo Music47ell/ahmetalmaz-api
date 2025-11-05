@@ -6,7 +6,7 @@ const PLACEHOLDER_IMAGE = 'https://cdn-images.dzcdn.net/images/artist//250x250-0
 export const getTopArtists = async (): Promise<ArtistInfo[]> => {
   try {
     const res = await fetch(
-      `https://api.listenbrainz.org/1/stats/user/${USERNAME}/artists?range=this_month&count=10`
+      `https://api.listenbrainz.org/1/stats/user/${USERNAME}/artists?range=month&count=10`
     )
 
     if (!res.ok) {

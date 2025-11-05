@@ -6,7 +6,7 @@ const PLACEHOLDER_IMAGE = 'https://cdn-images.dzcdn.net/images/cover//250x250-00
 export const getTopAlbums = async (): Promise<AlbumInfo[]> => {
   try {
     const res = await fetch(
-      `https://api.listenbrainz.org/1/stats/user/${USERNAME}/releases?range=this_month&count=10`
+      `https://api.listenbrainz.org/1/stats/user/${USERNAME}/releases?range=month&count=10`
     )
 
     if (!res.ok) {
@@ -21,9 +21,6 @@ export const getTopAlbums = async (): Promise<AlbumInfo[]> => {
         const album: AlbumInfo = {
           artist: release.artist_name,
           title: release.release_name,
-          release_mbid: release.release_mbid || null,
-          caa_id: release.caa_id || null,
-          caa_release_mbid: release.caa_release_mbid || null,
           image: '',
         }
 
