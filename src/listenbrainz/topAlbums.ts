@@ -1,4 +1,4 @@
-import { API_URL, USERNAME, logError } from '../utils/helpers.js'
+import { USERNAME, logError } from '../utils/helpers.js'
 import type { AlbumInfo } from '../types.js'
 
 const PLACEHOLDER_IMAGE = 'https://cdn-images.dzcdn.net/images/cover//250x250-000000-80-0-0.jpg'
@@ -8,6 +8,7 @@ export const getTopAlbums = async (): Promise<AlbumInfo[]> => {
     const res = await fetch(
       `https://api.listenbrainz.org/1/stats/user/${USERNAME}/releases?range=this_month&count=10`
     )
+
     if (!res.ok) {
       logError(`Failed to fetch top albums: ${res.statusText}`)
       return []
@@ -26,27 +27,29 @@ export const getTopAlbums = async (): Promise<AlbumInfo[]> => {
           image: '',
         }
 
-        // Prefer title + artist for best Deezer search accuracy
-        const query = `${album.title} ${album.artist}`.trim()
+        const query = encodeURIComponent(`${album.title} ${album.artist}`)
 
         try {
-          // Ask our Hono Deezer proxy for the album cover
-          const deezerUrl = `${API_URL}/deezer?type=album&q=${encodeURIComponent(query)}`
-          const coverRes = await fetch(deezerUrl)
+          // Fetch directly from Deezer search API
+          const deezerUrl = `https://api.deezer.com/search/album?q=${query}&limit=1`
+          const deezerRes = await fetch(deezerUrl)
 
-          if (coverRes.ok) {
-            // The proxy returns the image itself, not JSON, so just use the same URL
-            album.image = deezerUrl
+          if (!deezerRes.ok) {
+            logError(`Deezer fetch failed for ${album.artist} - ${album.title}: ${deezerRes.statusText}`)
+            album.image = PLACEHOLDER_IMAGE
+            return album
+          }
+
+          const deezerData = await deezerRes.json()
+          const first = deezerData.data?.[0]
+
+          if (first) {
+            album.image = first.cover_medium || first.cover || PLACEHOLDER_IMAGE
           } else {
-            logError(`Deezer proxy returned ${coverRes.status} for ${query}`)
+            album.image = PLACEHOLDER_IMAGE
           }
         } catch (err) {
-          logError(`Failed Deezer fetch for ${query}`, err)
-        }
-
-        // FINAL FALLBACK: placeholder
-        if (!album.image) {
-          console.warn(`No cover art found for: ${album.artist} - ${album.title}`)
+          logError(`Error fetching Deezer data for ${album.artist} - ${album.title}`, err)
           album.image = PLACEHOLDER_IMAGE
         }
 

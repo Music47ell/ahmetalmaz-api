@@ -1,4 +1,4 @@
-import { API_URL, USERNAME, logError } from '../utils/helpers.js'
+import { USERNAME, logError } from '../utils/helpers.js'
 import type { ArtistInfo } from '../types.js'
 
 const PLACEHOLDER_IMAGE = 'https://cdn-images.dzcdn.net/images/artist//250x250-000000-80-0-0.jpg'
@@ -8,6 +8,7 @@ export const getTopArtists = async (): Promise<ArtistInfo[]> => {
     const res = await fetch(
       `https://api.listenbrainz.org/1/stats/user/${USERNAME}/artists?range=this_month&count=10`
     )
+
     if (!res.ok) {
       logError(`Failed to fetch top artists: ${res.statusText}`)
       return []
@@ -24,23 +25,26 @@ export const getTopArtists = async (): Promise<ArtistInfo[]> => {
         }
 
         try {
-          // Ask our Hono Deezer proxy for the artist picture
-          const deezerUrl = `${API_URL}/deezer?type=artist&q=${encodeURIComponent(artist.name)}`
-          const coverRes = await fetch(deezerUrl)
+          const query = encodeURIComponent(artist.name)
+          const deezerUrl = `https://api.deezer.com/search/artist?q=${query}&limit=1`
+          const deezerRes = await fetch(deezerUrl)
 
-          if (coverRes.ok) {
-            // The proxy returns the image stream, so just use its URL
-            artist.image = deezerUrl
+          if (!deezerRes.ok) {
+            logError(`Deezer fetch failed for ${artist.name}: ${deezerRes.statusText}`)
+            artist.image = PLACEHOLDER_IMAGE
+            return artist
+          }
+
+          const deezerData = await deezerRes.json()
+          const first = deezerData.data?.[0]
+
+          if (first) {
+            artist.image = first.picture_medium || first.picture || PLACEHOLDER_IMAGE
           } else {
-            logError(`Deezer proxy returned ${coverRes.status} for ${artist.name}`)
+            artist.image = PLACEHOLDER_IMAGE
           }
         } catch (err) {
-          logError(`Deezer proxy fetch failed for ${artist.name}`, err)
-        }
-
-        // Final fallback: placeholder
-        if (!artist.image) {
-          console.warn(`No image found for artist: ${artist.name}`)
+          logError(`Error fetching Deezer data for ${artist.name}`, err)
           artist.image = PLACEHOLDER_IMAGE
         }
 

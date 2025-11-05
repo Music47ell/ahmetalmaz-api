@@ -1,4 +1,4 @@
-import { API_URL, USERNAME, logError } from '../utils/helpers.js'
+import { USERNAME, logError } from '../utils/helpers.js'
 import type { TrackInfo } from '../types.js'
 
 const PLACEHOLDER_IMAGE = 'https://cdn-images.dzcdn.net/images/cover//250x250-000000-80-0-0.jpg'
@@ -27,18 +27,25 @@ export const getRecentTracks = async (): Promise<TrackInfo[]> => {
           release_mbid: mbidMapping.release_mbid || '',
         }
 
+        // Fetch directly from Deezer
         try {
           const query = encodeURIComponent(`${track.title} ${track.artist}`)
-          const proxyUrl = `${API_URL}/deezer?type=track&q=${query}&format=json`
-          const proxyRes = await fetch(proxyUrl)
-          const data = await proxyRes.json()
+          const deezerUrl = `https://api.deezer.com/search/track?q=${query}&limit=1`
+          const deezerRes = await fetch(deezerUrl)
 
-          if (data) {
-            track.image = data.image || track.image
-            track.preview = data.preview || ''
+          if (!deezerRes.ok) {
+            logError(`Deezer fetch failed for ${track.artist} - ${track.title}: ${deezerRes.statusText}`)
+            return track
+          }
+
+          const deezerData = await deezerRes.json()
+          const first = deezerData.data?.[0]
+          if (first) {
+            track.image = first.album?.cover_medium || track.image
+            track.preview = first.preview || ''
           }
         } catch (err) {
-          logError(`Deezer proxy fetch failed for ${track.artist} - ${track.title}`, err)
+          logError(`Error fetching Deezer data for ${track.artist} - ${track.title}`, err)
         }
 
         return track
