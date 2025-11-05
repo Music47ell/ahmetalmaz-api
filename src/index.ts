@@ -6,8 +6,6 @@ import { getFullMessage } from '../src/curl-card/index.js'
 import { getListenBrainzStats } from '../src/listenbrainz/stats.js'
 import { getNowPlaying } from '../src/listenbrainz/nowPlaying.js'
 import { getRecentTracks } from '../src/listenbrainz/recentTracks.js'
-import { getTopAlbums } from '../src/listenbrainz/topAlbums.js'
-import { getTopArtists } from '../src/listenbrainz/topArtists.js'
 
 import { getTraktStats } from '../src/trakt/stats.js'
 import { getNowWatching } from '../src/trakt/nowWatching.js'
@@ -39,8 +37,6 @@ app.get('/', async (c) => c.text(getFullMessage()))
 app.get('/listenbrainz/stats', async (c) => c.json(await getListenBrainzStats()))
 app.get('/listenbrainz/now-playing', async (c) => c.json(await getNowPlaying()))
 app.get('/listenbrainz/recent-tracks', async (c) => c.json(await getRecentTracks()))
-app.get('/listenbrainz/top-albums', async (c) => c.json(await getTopAlbums()))
-app.get('/listenbrainz/top-artists', async (c) => c.json(await getTopArtists()))
 
 app.get('/trakt/stats', async (c) => c.json(await getTraktStats()))
 app.get('/trakt/now-watching', async (c) => c.json(await getNowWatching()))

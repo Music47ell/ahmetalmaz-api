@@ -9,21 +9,6 @@ export interface TrackInfo {
   caa_release_mbid?: string | null
 }
 
-export interface AlbumInfo {
-  artist: string
-  title: string
-  release_mbid: string | null
-  image: string
-  caa_id?: number | null
-  caa_release_mbid?: string | null
-}
-
-export interface ArtistInfo {
-  name: string
-  artist_mbid: string
-  image: string
-}
-
 export type CodeStats = {
 	total_xp: number
 	previous_xp: number
