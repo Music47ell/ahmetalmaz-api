@@ -5,6 +5,9 @@ on:
     branches:
       - main
 
+env:
+  IMAGE_NAME: ${{ github.repository.toLowerCase() }}/ahmetalmaz-api
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -23,7 +26,7 @@ jobs:
           password: ${{ secrets.GHCR_PAT }}
 
       - name: Build Docker image
-        run: docker build -t ghcr.io/${{ github.repository }}/ahmetalmaz-api:latest .
+        run: docker build -t ghcr.io/${{ github.IMAGE_NAME }}/ahmetalmaz-api:latest .
 
       - name: Push Docker image to GHCR
-        run: docker push ghcr.io/${{ github.repository }}/ahmetalmaz-api:latest
+        run: docker push ghcr.io/${{ github.IMAGE_NAME }}/ahmetalmaz-api:latest
