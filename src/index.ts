@@ -46,4 +46,8 @@ app.get('/trakt/watched-shows', async (c) => c.json(await getWatchedShows()))
 app.get('/codestats/stats', async (c) => c.json(await getCodeStatsStats()))
 app.get('/codestats/top-languages', async (c) => c.json(await getTopLanguages()))
 
-export default app
+export default {
+  port: 3000,
+  hostname: "0.0.0.0",  // required for Docker
+  fetch: app.fetch
+}
