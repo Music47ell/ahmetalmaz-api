@@ -1,0 +1,29 @@
+name: Build & Deploy Hono API (Bun)
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Bun
+        run: curl -fsSL https://bun.sh/install | bash
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_PAT }}
+
+      - name: Build Docker image
+        run: docker build -t ghcr.io/${{ github.repository }}/ahmetalmaz-api:latest .
+
+      - name: Push Docker image to GHCR
+        run: docker push ghcr.io/${{ github.repository }}/ahmetalmaz-api:latest

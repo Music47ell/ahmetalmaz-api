@@ -5,9 +5,6 @@ This project exposes several **Hono-based APIs** to retrieve personal stats from
 * **CodeStats**: Coding activity
 * **Trakt.tv**: Watched movies & shows
 * **ListenBrainz**: Music listening history
-
-The APIs are modular and optimized for **edge runtimes** like Cloudflare Workers.
-
 ---
 
 ## Table of Contents
@@ -49,7 +46,6 @@ Create a `.env` file in the project root:
 ```env
 USERNAME=<your username>
 TRAKT_CLIENT_ID=<your trakt api client id>
-WRANGLER_SEND_METRICS=false
 ```
 
 ---
@@ -174,5 +170,4 @@ src/
 ## Notes
 
 * All endpoints are **async** and return JSON.
-* Optimized for **edge runtimes** (Cloudflare Workers).
 * Can be extended with additional endpoints easily by adding new Hono routes.
