@@ -4,10 +4,12 @@ FROM node:20-bullseye-slim
 # Set working directory
 WORKDIR /app
 
-# Install Bun
-RUN curl -fsSL https://bun.sh/install | bash
+# Install Bun and add to PATH in the same step
+RUN curl -fsSL https://bun.sh/install | bash && \
+    export PATH="/root/.bun/bin:$PATH" && \
+    bun --version
 
-# Add Bun to PATH
+# Add Bun to PATH permanently for following steps
 ENV PATH="/root/.bun/bin:$PATH"
 
 # Copy project files
