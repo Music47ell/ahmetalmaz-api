@@ -5,15 +5,13 @@ on:
     branches:
       - main
 
-env:
-  IMAGE_NAME: ${{ toLower(github.repository) }}/ahmetalmaz-api
-
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
       - name: Install Bun
         run: curl -fsSL https://bun.sh/install | bash
@@ -26,7 +24,7 @@ jobs:
           password: ${{ secrets.GHCR_PAT }}
 
       - name: Build Docker image
-        run: docker build -t ghcr.io/${{ github.IMAGE_NAME }}/ahmetalmaz-api:latest .
+        run: docker build -t ghcr.io/${GITHUB_REPOSITORY@L}/ahmetalmaz-api:latest .
 
-      - name: Push Docker image to GHCR
-        run: docker push ghcr.io/${{ github.IMAGE_NAME }}/ahmetalmaz-api:latest
+      - name: Push Docker image
+        run: docker push ghcr.io/${GITHUB_REPOSITORY@L}/ahmetalmaz-api:latest
