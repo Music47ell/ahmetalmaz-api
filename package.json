@@ -3,7 +3,8 @@
   "type": "module",
   "scripts": {
     "dev": "bun run --hot src/index.ts",
-    "start": "bun run src/index.ts"
+    "start": "bun run src/index.ts",
+    "update": "npx npm-check-updates --format group --interactive"
   },
   "dependencies": {
     "hono": "^4.9.9"
