@@ -4,9 +4,9 @@ FROM node:20-bullseye-slim
 # Set working directory
 WORKDIR /app
 
-# Install required packages (curl, bash) and Bun
+# Install required packages for Bun
 RUN apt-get update && \
-    apt-get install -y curl bash && \
+    apt-get install -y curl bash unzip && \
     rm -rf /var/lib/apt/lists/* && \
     curl -fsSL https://bun.sh/install | bash
 
