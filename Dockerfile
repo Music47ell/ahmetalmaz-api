@@ -1,27 +1,16 @@
-# Use a slim Node base image
-FROM node:20-bullseye-slim
+FROM oven/bun:latest
 
-# Set working directory
 WORKDIR /app
 
-# Install required packages for Bun
-RUN apt-get update && \
-    apt-get install -y curl bash unzip && \
-    rm -rf /var/lib/apt/lists/* && \
-    curl -fsSL https://bun.sh/install | bash
-
-# Add Bun to PATH permanently
-ENV PATH="/root/.bun/bin:$PATH"
-
-# Copy project files
+# Copy only dependency files first (for caching)
 COPY package.json bun.lockb* ./
-COPY . .
 
-# Install dependencies
+# Install deps
 RUN bun install
 
-# Expose port your Hono API uses
+# Copy full project
+COPY . .
+
 EXPOSE 3000
 
-# Start the API
 CMD ["bun", "run", "src/index.ts"]
