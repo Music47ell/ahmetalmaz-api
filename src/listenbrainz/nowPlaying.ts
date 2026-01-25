@@ -2,27 +2,57 @@ import { USERNAME, logError } from '../utils/helpers.js'
 
 export const getNowPlaying = async () => {
   const endpoint = `https://api.listenbrainz.org/1/user/${USERNAME}/playing-now`
+
   try {
     const res = await fetch(endpoint)
     const { payload } = await res.json()
 
-    if (!payload.listens || payload.listens.length === 0) return { isPlaying: false }
+    if (!payload.listens?.length) return { isPlaying: false }
 
     const track = payload.listens[0].track_metadata
-    const trackInfo = { artist: track.artist_name, title: track.track_name, image: '', preview: '', isPlaying: true }
+    const mbid = track.additional_info?.recording_mbid || ''
 
-    const deezerRes = await fetch(`https://api.deezer.com/search/track?q=${encodeURIComponent(trackInfo.title)}&artist=${encodeURIComponent(trackInfo.artist)}`)
-    const deezerData = await deezerRes.json()
+    const trackInfo = {
+      artist: track.artist_name,
+      title: track.track_name,
+      image: '',
+      preview: '',
+      isPlaying: true,
+      love: false, // <-- new property
+      mbid,
+    }
 
-    if (deezerData.data?.length) {
-      const match = deezerData.data.find((t: any) =>
-        t.title.toLowerCase() === trackInfo.title.toLowerCase() &&
-        t.artist.name.toLowerCase() === trackInfo.artist.toLowerCase()
-      )
-      if (match) {
-        trackInfo.image = match.album.cover_medium
-        trackInfo.preview = match.preview
+    // Fetch feedback for this track only
+    if (mbid) {
+      try {
+        const feedbackRes = await fetch(
+          `https://api.listenbrainz.org/1/feedback/user/${USERNAME}/get-feedback-for-recordings?recording_mbids=${mbid}`
+        )
+        if (feedbackRes.ok) {
+          const feedbackData = await feedbackRes.json()
+          if (feedbackData.feedback?.length) {
+            trackInfo.love = feedbackData.feedback[0].score === 1
+          }
+        }
+      } catch (err) {
+        logError('Error fetching track feedback:', err)
       }
+    }
+
+    // Deezer enrichment
+    try {
+      const deezerRes = await fetch(
+        `https://api.deezer.com/search/track?q=${encodeURIComponent(trackInfo.title)} ${encodeURIComponent(trackInfo.artist)}&limit=1`
+      )
+      const deezerData = await deezerRes.json()
+
+      const first = deezerData.data?.[0]
+      if (first) {
+        trackInfo.image = first.album?.cover_medium || ''
+        trackInfo.preview = first.preview || ''
+      }
+    } catch (err) {
+      logError('Error fetching Deezer data for now playing track:', err)
     }
 
     return trackInfo

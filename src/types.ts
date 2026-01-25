@@ -27,3 +27,8 @@ export type Language = {
 	name: string
 	xps: number
 }
+
+export interface UmamiMetric {
+  x: string   // path
+  y: number   // views
+}

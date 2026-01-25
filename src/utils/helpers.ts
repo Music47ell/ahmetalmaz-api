@@ -1,10 +1,16 @@
 export const API_URL = process.env.API_URL
 export const USERNAME = process.env.USERNAME
 export const TRAKT_CLIENT_ID = process.env.TRAKT_CLIENT_ID
+export const UMAMI_URL = process.env.UMAMI_URL
+export const UMAMI_SITE_ID = process.env.UMAMI_SITE_ID
+export const UMAMI_TOKEN = process.env.UMAMI_TOKEN
 
 if (!API_URL) throw new Error('API_URL environment variable is not defined.')
 if (!USERNAME) throw new Error('USERNAME environment variable is not defined.')
 if (!TRAKT_CLIENT_ID) throw new Error('TRAKT_CLIENT_ID environment variable is not defined.')
+if (!UMAMI_URL) throw new Error('UMAMI_URL environment variable is not defined.')
+if (!UMAMI_SITE_ID) throw new Error('UMAMI_SITE_ID environment variable is not defined.')
+if (!UMAMI_TOKEN) throw new Error('UMAMI_TOKEN environment variable is not defined.')
 
 export const normalize = (str: string) =>
   str
