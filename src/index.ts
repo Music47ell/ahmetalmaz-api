@@ -1,5 +1,6 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
+import { bearerAuth } from 'hono/bearer-auth'
 
 import { getFullMessage } from '../src/curl-card/index.js'
 
@@ -75,12 +76,13 @@ app.get('/trakt/watched-shows', async (c) => c.json(await getWatchedShows()))
 app.get('/codestats/stats', async (c) => c.json(await getCodeStatsStats()))
 app.get('/codestats/top-languages', async (c) => c.json(await getTopLanguages()))
 
+app.use('/umami/*', bearerAuth({ token: process.env.STATS_TOKEN }))
 app.get('/umami/stats/:slug', async (c) => {
   const slug = c.req.param('slug')
-  const stats = await getUmamiStats(slug)
-
+  const stats = await getUmamiStats(slug) // Function to fetch stats
   return c.json(stats)
 })
+
 
 export default {
   port: 3000,
