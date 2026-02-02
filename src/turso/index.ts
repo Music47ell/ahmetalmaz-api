@@ -227,15 +227,15 @@ const updateAnalytics = async (data: {
 	})
 }
 
-const handleAnalytics = async (request: Request) => {
-  const body = await request.json()
-  const { title, slug, referrer } = body
+const handleAnalytics = async (request) => {
+  const body = await request.json();
+  const { title, slug, referrer } = body;
 
-  // Access the geo-location data from the Cloudflare injected headers
-  const country = request.headers.get('country')
-  const city = request.headers.get('city')
-  const latitude = request.headers.get('latitude')
-  const longitude = request.headers.get('longitude')
+  // Access the geo-location data from the request headers
+  const country = request.headers.get('country');
+  const city = request.headers.get('city');
+  const latitude = request.headers.get('latitude');
+  const longitude = request.headers.get('longitude');
 
   // Validate all required data
   if (
@@ -247,7 +247,7 @@ const handleAnalytics = async (request: Request) => {
     !latitude ||
     !longitude
   ) {
-    return new Response('Missing data', { status: 400 })
+    return new Response('Missing data', { status: 400 });
   }
 
   // Construct the data object to send to your analytics service
@@ -260,10 +260,10 @@ const handleAnalytics = async (request: Request) => {
     latitude,
     longitude,
     flag: getFlagEmoji(country), // Assuming this function returns a flag emoji
-  }
+  };
 
   // Send the data to your analytics service
-  await updateAnalytics(data)
+  await updateAnalytics(data);
 
   return new Response(
     JSON.stringify({ message: 'A Ok!' }),
@@ -272,7 +272,7 @@ const handleAnalytics = async (request: Request) => {
         'Content-Type': 'application/json',
       },
     }
-  )
-}
+  );
+};
 
 export { getBlogViews, getBlogViewsBySlug, getAnalytics, updateAnalytics, handleAnalytics }

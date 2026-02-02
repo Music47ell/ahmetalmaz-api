@@ -81,7 +81,9 @@ app.get("/codestats/top-languages", async (c) =>
 );
 
 app.use("/insight/*", bearerAuth({ token: process.env.INSIGHT_TOKEN }));
-app.post("/correct-horse-battery-staple", async (c) => { return handleAnalytics(c.req);});
+app.post("/correct-horse-battery-staple", async (c) => {
+  return c.json(await handleAnalytics(c.req));
+});
 app.get("/insight", async (c) => c.json(await getAnalytics()));
 app.get("/insight/:slug", async (c) => {
 	const { slug } = c.req.param();
@@ -92,7 +94,7 @@ app.get("/insight/:slug", async (c) => {
 app.use("/umami/*", bearerAuth({ token: process.env.STATS_TOKEN }));
 app.get("/umami/stats/:slug", async (c) => {
 	const slug = c.req.param("slug");
-	const stats = await getUmamiStats(slug); // Function to fetch stats
+	const stats = await getUmamiStats(slug);
 	return c.json(stats);
 });
 
