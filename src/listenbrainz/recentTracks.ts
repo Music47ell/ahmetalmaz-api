@@ -1,4 +1,4 @@
-import { USERNAME, logError } from '../utils/helpers.js'
+import { logError } from '../utils/helpers.js'
 import type { TrackInfo } from '../types.js'
 
 const PLACEHOLDER_IMAGE =
@@ -7,7 +7,7 @@ const PLACEHOLDER_IMAGE =
 export const getRecentTracks = async (): Promise<TrackInfo[]> => {
   try {
     const res = await fetch(
-      `https://api.listenbrainz.org/1/user/${USERNAME}/listens?count=10`
+      `https://api.listenbrainz.org/1/user/${process.env.USERNAME}/listens?count=10`
     )
 
     if (!res.ok) {
@@ -42,7 +42,7 @@ export const getRecentTracks = async (): Promise<TrackInfo[]> => {
     if (mbids.length > 0) {
       try {
         const feedbackUrl =
-          `https://api.listenbrainz.org/1/feedback/user/${USERNAME}` +
+          `https://api.listenbrainz.org/1/feedback/user/${process.env.USERNAME}` +
           `/get-feedback-for-recordings?recording_mbids=${mbids.join(',')}`
 
         const feedbackRes = await fetch(feedbackUrl)

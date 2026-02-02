@@ -7,7 +7,9 @@
     "update": "npx npm-check-updates --format group --interactive"
   },
   "dependencies": {
+    "@libsql/client": "^0.17.0",
     "canvas": "^3.2.0",
+    "drizzle-orm": "^0.45.1",
     "hono": "^4.9.9"
   },
   "devDependencies": {

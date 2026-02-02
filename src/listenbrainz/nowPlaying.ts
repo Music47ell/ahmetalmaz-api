@@ -1,7 +1,7 @@
-import { USERNAME, logError } from '../utils/helpers.js'
+import { logError } from '../utils/helpers.js'
 
 export const getNowPlaying = async () => {
-  const endpoint = `https://api.listenbrainz.org/1/user/${USERNAME}/playing-now`
+  const endpoint = `https://api.listenbrainz.org/1/user/${process.env.USERNAME}/playing-now`
 
   try {
     const res = await fetch(endpoint)
@@ -26,7 +26,7 @@ export const getNowPlaying = async () => {
     if (mbid) {
       try {
         const feedbackRes = await fetch(
-          `https://api.listenbrainz.org/1/feedback/user/${USERNAME}/get-feedback-for-recordings?recording_mbids=${mbid}`
+          `https://api.listenbrainz.org/1/feedback/user/${process.env.USERNAME}/get-feedback-for-recordings?recording_mbids=${mbid}`
         )
         if (feedbackRes.ok) {
           const feedbackData = await feedbackRes.json()

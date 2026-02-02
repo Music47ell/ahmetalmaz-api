@@ -1,10 +1,8 @@
-import { UMAMI_URL, UMAMI_SITE_ID, UMAMI_TOKEN } from '../utils/helpers'
 import { UmamiMetric } from '../types.js'
-
 
 export const getUmamiStats = async (slug: string): Promise<UmamiMetric[]> => {
   const response = await fetch(
-  `${UMAMI_URL}/api/websites/${UMAMI_SITE_ID}/metrics` +
+  `${process.env.UMAMI_URL}/api/websites/${process.env.UMAMI_SITE_ID}/metrics` +
     `?startAt=1763975614375` +
     `&endAt=1769355953146` +
     `&unit=day` +
@@ -14,7 +12,7 @@ export const getUmamiStats = async (slug: string): Promise<UmamiMetric[]> => {
   {
     headers: {
       accept: 'application/json',
-      authorization: `Bearer ${UMAMI_TOKEN}`
+      authorization: `Bearer ${process.env.UMAMI_TOKEN}`
     }
   }
 )

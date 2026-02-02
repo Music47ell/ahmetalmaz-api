@@ -1,12 +1,10 @@
-import { USERNAME } from '../utils/helpers.js'
-
 export const getListenBrainzStats = async () => {
   const endpoints = {
-    listenActivity: `https://api.listenbrainz.org/1/stats/user/${USERNAME}/listening-activity`,
-    listenCount: `https://api.listenbrainz.org/1/user/${USERNAME}/listen-count`,
-    artistCount: `https://api.listenbrainz.org/1/stats/user/${USERNAME}/artists?count=0`,
-    albumCount: `https://api.listenbrainz.org/1/stats/user/${USERNAME}/releases?count=0`,
-    tracksCount: `https://api.listenbrainz.org/1/stats/user/${USERNAME}/recordings?count=0`,
+    listenActivity: `https://api.listenbrainz.org/1/stats/user/${process.env.USERNAME}/listening-activity`,
+    listenCount: `https://api.listenbrainz.org/1/user/${process.env.USERNAME}/listen-count`,
+    artistCount: `https://api.listenbrainz.org/1/stats/user/${process.env.USERNAME}/artists?count=0`,
+    albumCount: `https://api.listenbrainz.org/1/stats/user/${process.env.USERNAME}/releases?count=0`,
+    tracksCount: `https://api.listenbrainz.org/1/stats/user/${process.env.USERNAME}/recordings?count=0`,
   }
 
   const [activityRes, listenRes, artistRes, albumRes, trackRes] = await Promise.all(

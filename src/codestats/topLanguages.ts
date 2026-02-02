@@ -1,4 +1,4 @@
-import { USERNAME, get_level, get_level_progress } from "../utils/helpers"
+import { get_level, get_level_progress } from "../utils/helpers"
 import { Languages } from "../types"
 
 const GITHUB_COLORS_URL =
@@ -16,7 +16,7 @@ async function getLanguageColors(): Promise<Record<string, { color: string }>> {
 }
 
 export const getTopLanguages = async () => {
-	const response = await fetch(`https://codestats.net/api/users/${USERNAME}`)
+	const response = await fetch(`https://codestats.net/api/users/${process.env.USERNAME}`)
 	const data = (await response.json()) as Languages
 
 	const githubColors = await getLanguageColors()

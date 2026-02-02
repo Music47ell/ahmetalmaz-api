@@ -18,6 +18,9 @@ import { getWatchedShows } from '../src/trakt/watchedShows.js'
 import { getCodeStatsStats } from '../src/codestats/stats.js'
 import { getTopLanguages } from '../src/codestats/topLanguages.js'
 
+import { getAnalytics, getBlogViewsBySlug } from '../src/turso'
+import { handleAnalytics } from '../src/insignt/correct-horse-battery-staple.js'
+
 import { getUmamiStats } from '../src/umami/stats.js'
 
 const app = new Hono()
@@ -75,6 +78,17 @@ app.get('/trakt/watched-shows', async (c) => c.json(await getWatchedShows()))
 
 app.get('/codestats/stats', async (c) => c.json(await getCodeStatsStats()))
 app.get('/codestats/top-languages', async (c) => c.json(await getTopLanguages()))
+
+app.use('/insight/*', bearerAuth({ token: process.env.INSIGHT_TOKEN }));
+app.post('/insignt', async (c) => {
+  return handleAnalytics(c.req)
+})
+app.get('/insight', async (c) => c.json(await getAnalytics()))
+app.get('/insight/:slug', async (c) => {
+  const { slug } = c.req.param();
+  const views = await getBlogViewsBySlug(slug);
+  return c.json({ views });
+});
 
 app.use('/umami/*', bearerAuth({ token: process.env.STATS_TOKEN }))
 app.get('/umami/stats/:slug', async (c) => {
