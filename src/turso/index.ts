@@ -2,6 +2,7 @@ import { createClient } from '@libsql/client/web'
 import { drizzle } from 'drizzle-orm/libsql'
 import { sql, eq } from 'drizzle-orm'
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
+import { getFlagEmoji } from '../utils/helpers'
 
 const connection = () => {
 	return createClient({
@@ -226,4 +227,52 @@ const updateAnalytics = async (data: {
 	})
 }
 
-export { getBlogViews, getBlogViewsBySlug, getAnalytics, updateAnalytics }
+const handleAnalytics = async (request: Request) => {
+  const body = await request.json()
+  const { title, slug, referrer } = body
+
+  // Access the geo-location data from the Cloudflare injected headers
+  const country = request.headers.get('country')
+  const city = request.headers.get('city')
+  const latitude = request.headers.get('latitude')
+  const longitude = request.headers.get('longitude')
+
+  // Validate all required data
+  if (
+    !title ||
+    !slug ||
+    !referrer ||
+    !country ||
+    !city ||
+    !latitude ||
+    !longitude
+  ) {
+    return new Response('Missing data', { status: 400 })
+  }
+
+  // Construct the data object to send to your analytics service
+  const data = {
+    title,
+    slug,
+    referrer,
+    country,
+    city,
+    latitude,
+    longitude,
+    flag: getFlagEmoji(country), // Assuming this function returns a flag emoji
+  }
+
+  // Send the data to your analytics service
+  await updateAnalytics(data)
+
+  return new Response(
+    JSON.stringify({ message: 'A Ok!' }),
+    {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    }
+  )
+}
+
+export { getBlogViews, getBlogViewsBySlug, getAnalytics, updateAnalytics, handleAnalytics }
