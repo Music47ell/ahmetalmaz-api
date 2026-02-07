@@ -11,10 +11,10 @@ import { getNowWatching } from "../src/trakt/nowWatching.js";
 import { getTraktStats } from "../src/trakt/stats.js";
 import { getWatchedMovies } from "../src/trakt/watchedMovies.js";
 import { getWatchedShows } from "../src/trakt/watchedShows.js";
-
 import { handleAnalytics, getAnalytics, getBlogViewsBySlug } from "../src/turso";
-import { getUmamiStats } from "../src/umami/stats.js";
 import { generateOg } from "./ogGenerator/index.js";
+import { getGoodreadsStats } from "../src/goodreads/stats.js"
+import { getGoodreadsReadBooks } from "../src/goodreads/readBooks.js"
 
 const app = new Hono();
 
@@ -24,7 +24,6 @@ app.use(
 	"*",
 	cors({
 		origin: (origin) => {
-			// If origin is in the list, allow it; otherwise fallback to first domain
 			return origin && allowedOrigins.includes(origin)
 				? origin
 				: allowedOrigins[0];
@@ -91,12 +90,8 @@ app.get("/insight/:slug", async (c) => {
 	return c.json({ views });
 });
 
-app.use("/umami/*", bearerAuth({ token: process.env.STATS_TOKEN }));
-app.get("/umami/stats/:slug", async (c) => {
-	const slug = c.req.param("slug");
-	const stats = await getUmamiStats(slug);
-	return c.json(stats);
-});
+app.get("/goodreads/stats", async (c) => c.json(await getGoodreadsStats()));
+app.get("/goodreads/books-read", async (c) => c.json(await getGoodreadsReadBooks()));
 
 export default {
 	port: 3000,

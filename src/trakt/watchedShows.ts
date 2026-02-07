@@ -4,34 +4,78 @@ export interface Show {
   title: string
   poster: string
   url: string
+  rating: number | null
+  watched: Date
+}
+
+type TraktHistoryItem = {
+  show: {
+    ids: {
+      tmdb: number
+    }
+  }
+}
+
+type TraktRatingItem = {
+  rating: number
+  show: {
+    ids: {
+      tmdb: number
+    }
+  }
 }
 
 export const getWatchedShows = async (): Promise<Show[]> => {
-  const endpoint = `https://api.trakt.tv/users/${process.env.USERNAME}/history/shows?limit=1000`
-  const res = await fetch(endpoint, {
-    headers: {
-      'Content-Type': 'application/json',
-      'trakt-api-version': '2',
-      'trakt-api-key': process.env.TRAKT_CLIENT_ID,
-      'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36',
-    } as HeadersInit,
-  })
+  const headers = {
+    'Content-Type': 'application/json',
+    'trakt-api-version': '2',
+    'trakt-api-key': process.env.TRAKT_CLIENT_ID!,
+    'User-Agent':
+      'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36',
+  } as HeadersInit
 
-  const traktShows = (await res.json()) as { show: { ids: { tmdb: number } } }[]
-  const ids = Array.from(new Set(traktShows.map(s => s.show.ids.tmdb))).slice(0, 20)
+  const historyRes = await fetch(
+    `https://api.trakt.tv/users/${process.env.USERNAME}/history/shows?limit=1000`,
+    { headers }
+  )
 
-  const shows = (await Promise.all(
-    ids.map(async (tmdbId) => {
-      const tmdb = await getTMDBData(tmdbId, 'shows')
-      const data = await tmdb.json()
-      if (!data.poster_path || !data.name) return null
-      return {
-        title: data.name,
-        poster: `https://image.tmdb.org/t/p/w500${data.poster_path}`,
-        url: `https://www.themoviedb.org/tv/${tmdbId}`,
-      }
-    }),
-  )).filter(Boolean) as Show[]
+  const traktShows = (await historyRes.json()) as TraktHistoryItem[]
+
+  const tmdbIds = Array.from(
+    new Set(traktShows.map((s) => s.show.ids.tmdb))
+  ).slice(0, 10)
+
+  const ratingsRes = await fetch(
+    `https://api.trakt.tv/users/${process.env.USERNAME}/ratings/shows`,
+    { headers }
+  )
+
+  const traktRatings = (await ratingsRes.json()) as TraktRatingItem[]
+
+  const ratingMap = new Map<number, number>()
+  for (const item of traktRatings) {
+    if (item.show?.ids?.tmdb) {
+      ratingMap.set(item.show.ids.tmdb, item.rating)
+    }
+  }
+
+  const shows = (
+    await Promise.all(
+      tmdbIds.map(async (tmdbId) => {
+        const tmdbRes = await getTMDBData(tmdbId, 'shows')
+        const data = await tmdbRes.json()
+
+        if (!data.poster_path || !data.name) return null
+
+        return {
+          title: data.name,
+          poster: `https://image.tmdb.org/t/p/w500${data.poster_path}`,
+          url: `https://www.themoviedb.org/tv/${tmdbId}`,
+          rating: ratingMap.get(tmdbId) ?? null,
+        }
+      })
+    )
+  ).filter(Boolean) as Show[]
 
   return shows
 }

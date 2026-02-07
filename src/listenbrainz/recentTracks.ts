@@ -34,7 +34,6 @@ export const getRecentTracks = async (): Promise<TrackInfo[]> => {
       }
     })
 
-    // ---- FETCH FEEDBACK (BATCH) ----
     const mbids = tracks
       .map(t => t.mbid)
       .filter(Boolean)
@@ -67,7 +66,6 @@ export const getRecentTracks = async (): Promise<TrackInfo[]> => {
       }
     }
 
-    // ---- DEEZER ENRICHMENT ----
     await Promise.all(
       tracks.map(async track => {
         try {

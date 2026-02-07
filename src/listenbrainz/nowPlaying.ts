@@ -18,11 +18,10 @@ export const getNowPlaying = async () => {
       image: '',
       preview: '',
       isPlaying: true,
-      love: false, // <-- new property
+      love: false,
       mbid,
     }
 
-    // Fetch feedback for this track only
     if (mbid) {
       try {
         const feedbackRes = await fetch(
@@ -39,7 +38,6 @@ export const getNowPlaying = async () => {
       }
     }
 
-    // Deezer enrichment
     try {
       const deezerRes = await fetch(
         `https://api.deezer.com/search/track?q=${encodeURIComponent(trackInfo.title)} ${encodeURIComponent(trackInfo.artist)}&limit=1`

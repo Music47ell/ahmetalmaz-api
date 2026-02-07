@@ -50,11 +50,10 @@ export const getTopLanguages = async () => {
 		const langData = data.languages[language]
 		if (!langData || langData.xps <= 0) continue
 
-		// Skip JS/TS JSX since we merged them into React
 		if (language === 'JavaScript (JSX)' || language === 'TypeScript (JSX)')
 			continue
 
-		const baseName = language.replace(/\s*\(.*\)/, '') // Remove "(JSX)" or similar
+		const baseName = language.replace(/\s*\(.*\)/, '')
 		const color =
 			githubColors[language]?.color ||
 			githubColors[baseName]?.color ||

@@ -1,8 +1,8 @@
 export const normalize = (str: string) =>
   str
     .toLowerCase()
-    .replace(/\(.*?\)/g, '') // Remove parentheses
-    .replace(/[^\w\s]/g, '') // Remove special chars
+    .replace(/\(.*?\)/g, '')
+    .replace(/[^\w\s]/g, '')
     .trim()
 
 export const logError = (message: string, error?: unknown) => {

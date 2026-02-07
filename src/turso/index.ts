@@ -142,7 +142,6 @@ const getAnalytics = async () => {
 		const lastDayStatement = sql`select count(date) as total from analytics where date > date('now', '-1 days')`
 		const lastDayRes = (await db.all(lastDayStatement)) as { total: number }[]
 
-		// Assuming lastDayRes is an array with one element containing the total count
 		const totalCount = lastDayRes[0]?.total || 0
 
 		return totalCount
@@ -231,13 +230,11 @@ const handleAnalytics = async (request) => {
   const body = await request.json();
   const { title, slug, referrer } = body;
 
-  // Access the geo-location data from the request headers
   const country = request.headers.get('country');
   const city = request.headers.get('city');
   const latitude = request.headers.get('latitude');
   const longitude = request.headers.get('longitude');
 
-  // Validate all required data
   if (
     !title ||
     !slug ||
@@ -250,7 +247,6 @@ const handleAnalytics = async (request) => {
     return new Response('Missing data', { status: 400 });
   }
 
-  // Construct the data object to send to your analytics service
   const data = {
     title,
     slug,
@@ -259,10 +255,9 @@ const handleAnalytics = async (request) => {
     city,
     latitude,
     longitude,
-    flag: getFlagEmoji(country), // Assuming this function returns a flag emoji
+    flag: getFlagEmoji(country),
   };
 
-  // Send the data to your analytics service
   await updateAnalytics(data);
 
   return new Response(

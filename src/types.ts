@@ -19,16 +19,11 @@ export type CodeStats = {
 }
 
 export type Languages = {
-	languages: { [key: string]: Language } // Use an index signature to allow string keys
+	languages: { [key: string]: Language }
 }
 
 export type Language = {
 	ranking: number
 	name: string
 	xps: number
-}
-
-export interface UmamiMetric {
-  x: string   // path
-  y: number   // views
 }
