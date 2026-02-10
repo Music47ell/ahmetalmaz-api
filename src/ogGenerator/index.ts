@@ -66,7 +66,7 @@ export async function generateOg(
   })
 }
 
-const borderWidth = 2  // thickness of the border
+const borderWidth = 2
 
 ctx.strokeStyle = colors.dracula
 ctx.lineWidth = borderWidth
@@ -94,7 +94,6 @@ ctx.strokeRect(
   ctx.stroke()
 
   ctx.font = '28px "Helvetica Neue", sans-serif'
-  // drawColoredWord(ctx, line, "Türkiye", padding, lineY, colors.turkyie, colors.lincoln)
   ctx.fillStyle = colors.cullen
   ctx.shadowColor = 'rgba(0, 0, 0, 0.2)'
   ctx.shadowBlur = 5
