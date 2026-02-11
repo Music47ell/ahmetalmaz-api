@@ -2,7 +2,7 @@ import { createClient } from '@libsql/client/web'
 import { drizzle } from 'drizzle-orm/libsql'
 import { sql, eq } from 'drizzle-orm'
 import { integer, numeric, sqliteTable, text } from 'drizzle-orm/sqlite-core'
-import { getFlagEmoji } from '../utils/helpers'
+import { getFlagEmoji, decodeUtf8 } from '../utils/helpers'
 
 const connection = () => {
 	return createClient({
@@ -20,10 +20,12 @@ const analyticsTable = sqliteTable('analytics', {
   slug: text('slug').notNull(),
   referrer: text('referrer').notNull(),
   flag: text('flag').notNull(),
+  countrycode: text('countrycode').notNull(),
   country: text('country').notNull(),
   city: text('city').notNull(),
   latitude: numeric('latitude'),
   longitude: numeric('longitude'),
+  timezone: text('timezone').notNull(),
   continent: text('continent').notNull().default('Unknown'),
   region: text('region').notNull().default('Unknown'),
   regioncode: text('regioncode').notNull().default('Unknown'),
@@ -208,6 +210,7 @@ const updateAnalytics = async (data: {
   title: string;
   slug: string;
   referrer: string;
+  countrycode: string;
   country: string;
   continent?: string;
   region?: string;
@@ -215,6 +218,7 @@ const updateAnalytics = async (data: {
   city: string;
   latitude?: number;
   longitude?: number;
+  timezone?: string;
   flag: string;
   browser?: string;
   browserVersion?: string;
@@ -235,6 +239,7 @@ const updateAnalytics = async (data: {
     slug: data.slug,
     referrer: data.referrer,
     flag: data.flag,
+    countrycode: data.countrycode,
     country: data.country,
     continent: data.continent || 'Unknown',
     region: data.region || 'Unknown',
@@ -242,6 +247,7 @@ const updateAnalytics = async (data: {
     city: data.city,
     latitude: data.latitude ?? 0,
     longitude: data.longitude ?? 0,
+    timezone: data.timezone || 'Unknown'
     browser: data.browser || 'Unknown',
     browserVersion: data.browserVersion || '',
     deviceType: data.deviceType || '',
@@ -256,9 +262,6 @@ const updateAnalytics = async (data: {
 
 const handleAnalytics = async (c: Context) => {
   try {
-    console.log("Body:", await c.req.json());
-    console.log("Headers:", Object.fromEntries(c.req.raw.headers.entries()));
-
     const body = await c.req.json();
     const {
       title,
@@ -275,13 +278,16 @@ const handleAnalytics = async (c: Context) => {
       userAgent,
     } = body;
 
-    const country = c.req.header('cf-ipcountry') || 'Unknown';
+    const countrycode = c.req.header('cf-ipcountry') || 'Unknown';
+    const country = getCountryName(countryCode);
     const continent = c.req.header('cf-ipcontinent') || 'Unknown';
-    const city = c.req.header('cf-ipcity') || 'Unknown';
-    const region = c.req.header('cf-ipregion') || 'Unknown';
-    const regioncode = c.req.header('cf-ipregioncode') || 'Unknown';
+    const cityRaw = c.req.header('cf-ipcity') || 'Unknown';
+    const city = decodeUtf8(cityRaw);
+    const region = c.req.header('cf-region') || 'Unknown';
+    const regioncode = c.req.header('cf-region-code') || 'Unknown';
     const latitude = parseFloat(c.req.header('cf-iplatitude') || '0');
     const longitude = parseFloat(c.req.header('cf-iplongitude') || '0');
+    const timezone = c.req.header('cf-timezone') || 'Unknown'
 
     if (!title || !slug || !referrer) {
       return new Response('Missing required body data', { status: 400 });
@@ -300,6 +306,7 @@ const handleAnalytics = async (c: Context) => {
       platform: platform || '',
       screenResolution: screenResolution || '',
       userAgent: userAgent || 'Unknown',
+      countrycode,
       country,
       continent,
       region,
@@ -307,6 +314,7 @@ const handleAnalytics = async (c: Context) => {
       city,
       latitude,
       longitude,
+      timezone,
       flag: getFlagEmoji(country),
     };
 
