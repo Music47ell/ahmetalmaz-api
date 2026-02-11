@@ -29,7 +29,7 @@ app.use(
 				: allowedOrigins[0];
 		},
 		allowMethods: ["GET", "POST", "OPTIONS"],
-		allowHeaders: ["Content-Type", "Authorization"],
+		allowHeaders: ["Content-Type", "Authorization", "Country", "City", "Latitude", "Longitude"],
 	}),
 );
 
