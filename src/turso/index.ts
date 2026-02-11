@@ -226,14 +226,14 @@ const updateAnalytics = async (data: {
 	})
 }
 
-const handleAnalytics = async (request) => {
+const handleAnalytics = async ({ request }) => {
   const body = await request.json();
   const { title, slug, referrer } = body;
 
-  const country = request.headers.get('country');
-  const city = request.headers.get('city');
-  const latitude = request.headers.get('latitude');
-  const longitude = request.headers.get('longitude');
+  const country = request.headers.get('Country');
+  const city = request.headers.get('City');
+  const latitude = request.headers.get('Latitude');
+  const longitude = request.headers.get('Longitude');
 
   if (
     !title ||
