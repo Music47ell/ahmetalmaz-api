@@ -279,7 +279,7 @@ const handleAnalytics = async (c: Context) => {
     } = body;
 
     const countrycode = c.req.header('cf-ipcountry') || 'Unknown';
-    const country = getCountryName(countryCode);
+    const country = getCountryName(countrycode);
     const continent = c.req.header('cf-ipcontinent') || 'Unknown';
     const cityRaw = c.req.header('cf-ipcity') || 'Unknown';
     const city = decodeUtf8(cityRaw);
