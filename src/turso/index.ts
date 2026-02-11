@@ -256,6 +256,9 @@ const updateAnalytics = async (data: {
 
 const handleAnalytics = async (c: Context) => {
   try {
+    console.log("Body:", await c.req.json());
+    console.log("Headers:", Object.fromEntries(c.req.raw.headers.entries()));
+
     const body = await c.req.json();
     const {
       title,
