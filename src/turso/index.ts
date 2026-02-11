@@ -272,13 +272,13 @@ const handleAnalytics = async (c: Context) => {
       userAgent,
     } = body;
 
-    const country = c.req.header('Country') || 'Unknown';
-    const continent = c.req.header('Continent') || 'Unknown';
-    const region = c.req.header('Region') || 'Unknown';
-    const regioncode = c.req.header('Region-Code') || 'Unknown';
-    const city = c.req.header('City') || 'Unknown';
-    const latitude = parseFloat(c.req.header('Latitude') || '') || 0;
-    const longitude = parseFloat(c.req.header('Longitude') || '') || 0;
+    const country = c.req.header('country') || 'Unknown';
+    const continent = c.req.header('continent') || 'Unknown';
+    const region = c.req.header('region') || 'Unknown';
+    const regioncode = c.req.header('region-code') || 'Unknown';
+    const city = c.req.header('city') || 'Unknown';
+    const latitude = parseFloat(c.req.header('latitude') || '') || 0;
+    const longitude = parseFloat(c.req.header('longitude') || '') || 0;
 
     if (!title || !slug || !referrer) {
       return new Response('Missing required body data', { status: 400 });
