@@ -29,7 +29,7 @@ app.use(
 				: allowedOrigins[0];
 		},
 		allowMethods: ["GET", "POST", "OPTIONS"],
-		allowHeaders: ["Content-Type", "Authorization", "Country", "City", "Latitude", "Longitude"],
+		allowHeaders: ["Content-Type", "Authorization", "Continent", "Country", "Region", "Region-Code", "City", "Latitude", "Longitude"],
 	}),
 );
 
@@ -80,9 +80,7 @@ app.get("/codestats/top-languages", async (c) =>
 );
 
 app.use("/insight/*", bearerAuth({ token: process.env.INSIGHT_TOKEN }));
-app.post("/correct-horse-battery-staple", async (c) => {
-  return c.json(await handleAnalytics(c.req));
-});
+app.post("/correct-horse-battery-staple", handleAnalytics);
 app.get("/insight", async (c) => c.json(await getAnalytics()));
 app.get("/insight/:slug", async (c) => {
 	const { slug } = c.req.param();

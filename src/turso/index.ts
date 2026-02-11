@@ -1,7 +1,7 @@
 import { createClient } from '@libsql/client/web'
 import { drizzle } from 'drizzle-orm/libsql'
 import { sql, eq } from 'drizzle-orm'
-import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
+import { integer, numeric, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 import { getFlagEmoji } from '../utils/helpers'
 
 const connection = () => {
@@ -14,17 +14,28 @@ const connection = () => {
 export const db = drizzle(connection())
 
 const analyticsTable = sqliteTable('analytics', {
-	id: integer('id').primaryKey(),
-	date: text('date').notNull(),
-	title: text('title').notNull(),
-	slug: text('slug').notNull(),
-	referrer: text('referrer').notNull(),
-	flag: text('flag').notNull(),
-	country: text('country').notNull(),
-	city: text('city').notNull(),
-	latitude: text('latitude').notNull(),
-	longitude: text('longitude').notNull(),
-})
+  id: integer('id').primaryKey(),
+  date: numeric('date').notNull(),
+  title: text('title').notNull(),
+  slug: text('slug').notNull(),
+  referrer: text('referrer').notNull(),
+  flag: text('flag').notNull(),
+  country: text('country').notNull(),
+  city: text('city').notNull(),
+  latitude: numeric('latitude'),
+  longitude: numeric('longitude'),
+  continent: text('continent').notNull().default('Unknown'),
+  region: text('region').notNull().default('Unknown'),
+  regioncode: text('regioncode').notNull().default('Unknown'),
+  os: text('os').notNull().default('Unknown'),
+  browser: text('browser').notNull().default('Unknown'),
+  userAgent: text('userAgent').notNull().default('Unknown'),
+  deviceType: text('deviceType'),
+  browserVersion: text('browserVersion'),
+  osVersion: text('osVersion'),
+  platform: text('platform'),
+  screenResolution: text('screenResolution'),
+});
 
 const getBlogViews = async () => {
 	const db = drizzle(connection())
@@ -194,47 +205,80 @@ const getAnalytics = async () => {
 }
 
 const updateAnalytics = async (data: {
-	title: string
-	slug: string
-	referrer: string
-	country: string
-	city: string
-	latitude: string
-	longitude: string
-	flag: string
+  title: string;
+  slug: string;
+  referrer: string;
+  country: string;
+  continent?: string;
+  region?: string;
+  regioncode?: string;
+  city: string;
+  latitude?: number;
+  longitude?: number;
+  flag: string;
+  browser?: string;
+  browserVersion?: string;
+  deviceType?: string;
+  language?: string;
+  os?: string;
+  osVersion?: string;
+  platform?: string;
+  screenResolution?: string;
+  userAgent?: string;
 }) => {
-	const db = drizzle(connection())
-	const date = new Date().toISOString()
-	const title = data.title
-	const slug = data.slug
-	const referrer = data.referrer
-	const country = data.country
-	const city = data.city
-	const latitude = data.latitude
-	const longitude = data.longitude
-	const flag = data.flag
-	await db.insert(analyticsTable).values({
-		date,
-		title,
-		slug,
-		referrer,
-		flag,
-		country,
-		city,
-		latitude,
-		longitude,
-	})
-}
+  const db = drizzle(connection());
+  const date = new Date().toISOString()
 
-const handleAnalytics = async (request: Request) => {
+  await db.insert(analyticsTable).values({
+    date,
+    title: data.title,
+    slug: data.slug,
+    referrer: data.referrer,
+    flag: data.flag,
+    country: data.country,
+    continent: data.continent || 'Unknown',
+    region: data.region || 'Unknown',
+    regioncode: data.regioncode || 'Unknown',
+    city: data.city,
+    latitude: data.latitude ?? 0,
+    longitude: data.longitude ?? 0,
+    browser: data.browser || 'Unknown',
+    browserVersion: data.browserVersion || '',
+    deviceType: data.deviceType || '',
+    language: data.language || '',
+    os: data.os || 'Unknown',
+    osVersion: data.osVersion || '',
+    platform: data.platform || '',
+    screenResolution: data.screenResolution || '',
+    userAgent: data.userAgent || 'Unknown',
+  });
+};
+
+const handleAnalytics = async (c: Context) => {
   try {
-    const body = await request.json();
-    const { title, slug, referrer, os, browser, userAgent } = body;
+    const body = await c.req.json();
+    const {
+      title,
+      slug,
+      referrer,
+      browser,
+      browserVersion,
+      deviceType,
+      language,
+      os,
+      osVersion,
+      platform,
+      screenResolution,
+      userAgent,
+    } = body;
 
-    const country = request.headers.get('Country') || 'Unknown';
-    const city = request.headers.get('City') || 'Unknown';
-    const latitude = request.headers.get('Latitude') || null;
-    const longitude = request.headers.get('Longitude') || null;
+    const country = c.req.header('Country') || 'Unknown';
+    const continent = c.req.header('Continent') || 'Unknown';
+    const region = c.req.header('Region') || 'Unknown';
+    const regioncode = c.req.header('Region-Code') || 'Unknown';
+    const city = c.req.header('City') || 'Unknown';
+    const latitude = parseFloat(c.req.header('Latitude') || '') || 0;
+    const longitude = parseFloat(c.req.header('Longitude') || '') || 0;
 
     if (!title || !slug || !referrer) {
       return new Response('Missing required body data', { status: 400 });
@@ -244,10 +288,19 @@ const handleAnalytics = async (request: Request) => {
       title,
       slug,
       referrer,
-      os: os || 'Unknown',
       browser: browser || 'Unknown',
+      browserVersion: browserVersion || '',
+      deviceType: deviceType || '',
+      language: language || '',
+      os: os || 'Unknown',
+      osVersion: osVersion || '',
+      platform: platform || '',
+      screenResolution: screenResolution || '',
       userAgent: userAgent || 'Unknown',
       country,
+      continent,
+      region,
+      regioncode,
       city,
       latitude,
       longitude,
