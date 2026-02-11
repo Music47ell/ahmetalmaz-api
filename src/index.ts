@@ -80,7 +80,7 @@ app.get("/codestats/top-languages", async (c) =>
 );
 
 app.use("/insight/*", bearerAuth({ token: process.env.INSIGHT_TOKEN }));
-app.post("/correct-horse-battery-staple", handleAnalytics);
+app.post("/correct-horse-battery-staple", (c) => handleAnalytics(c));
 app.get("/insight", async (c) => c.json(await getAnalytics()));
 app.get("/insight/:slug", async (c) => {
 	const { slug } = c.req.param();
