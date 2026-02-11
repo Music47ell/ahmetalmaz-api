@@ -247,7 +247,7 @@ const updateAnalytics = async (data: {
     city: data.city,
     latitude: data.latitude ?? 0,
     longitude: data.longitude ?? 0,
-    timezone: data.timezone || 'Unknown'
+    timezone: data.timezone || 'Unknown',
     browser: data.browser || 'Unknown',
     browserVersion: data.browserVersion || '',
     deviceType: data.deviceType || '',
