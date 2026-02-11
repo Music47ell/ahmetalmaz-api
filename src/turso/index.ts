@@ -256,9 +256,6 @@ const updateAnalytics = async (data: {
 
 const handleAnalytics = async (c: Context) => {
   try {
-    console.log("Body:", await c.req.json());
-    console.log("Headers:", Object.fromEntries(c.req.raw.headers.entries()));
-
     const body = await c.req.json();
     const {
       title,
@@ -275,13 +272,13 @@ const handleAnalytics = async (c: Context) => {
       userAgent,
     } = body;
 
-    const country = c.req.header('country') || 'Unknown';
-    const continent = c.req.header('continent') || 'Unknown';
-    const region = c.req.header('region') || 'Unknown';
-    const regioncode = c.req.header('region-code') || 'Unknown';
-    const city = c.req.header('city') || 'Unknown';
-    const latitude = parseFloat(c.req.header('latitude') || '') || 0;
-    const longitude = parseFloat(c.req.header('longitude') || '') || 0;
+    const country = c.req.header('cf-ipcountry') || 'Unknown';
+    const continent = c.req.header('cf-ipcontinent') || 'Unknown';
+    const city = c.req.header('cf-ipcity') || 'Unknown';
+    const region = c.req.header('cf-ipregion') || 'Unknown';
+    const regioncode = c.req.header('cf-ipregioncode') || 'Unknown';
+    const latitude = parseFloat(c.req.header('cf-iplatitude') || '0');
+    const longitude = parseFloat(c.req.header('cf-iplongitude') || '0');
 
     if (!title || !slug || !referrer) {
       return new Response('Missing required body data', { status: 400 });
