@@ -226,48 +226,44 @@ const updateAnalytics = async (data: {
 	})
 }
 
-const handleAnalytics = async ({ request }) => {
-  const body = await request.json();
-  const { title, slug, referrer } = body;
+const handleAnalytics = async (request: Request) => {
+  try {
+    const body = await request.json();
+    const { title, slug, referrer, os, browser, userAgent } = body;
 
-  const country = request.headers.get('Country');
-  const city = request.headers.get('City');
-  const latitude = request.headers.get('Latitude');
-  const longitude = request.headers.get('Longitude');
+    const country = request.headers.get('Country') || 'Unknown';
+    const city = request.headers.get('City') || 'Unknown';
+    const latitude = request.headers.get('Latitude') || null;
+    const longitude = request.headers.get('Longitude') || null;
 
-  if (
-    !title ||
-    !slug ||
-    !referrer ||
-    !country ||
-    !city ||
-    !latitude ||
-    !longitude
-  ) {
-    return new Response('Missing data', { status: 400 });
-  }
-
-  const data = {
-    title,
-    slug,
-    referrer,
-    country,
-    city,
-    latitude,
-    longitude,
-    flag: getFlagEmoji(country),
-  };
-
-  await updateAnalytics(data);
-
-  return new Response(
-    JSON.stringify({ message: 'A Ok!' }),
-    {
-      headers: {
-        'Content-Type': 'application/json',
-      },
+    if (!title || !slug || !referrer) {
+      return new Response('Missing required body data', { status: 400 });
     }
-  );
+
+    const data = {
+      title,
+      slug,
+      referrer,
+      os: os || 'Unknown',
+      browser: browser || 'Unknown',
+      userAgent: userAgent || 'Unknown',
+      country,
+      city,
+      latitude,
+      longitude,
+      flag: getFlagEmoji(country),
+    };
+
+    await updateAnalytics(data);
+
+    return new Response(
+      JSON.stringify({ message: 'A Ok!' }),
+      { headers: { 'Content-Type': 'application/json' } }
+    );
+  } catch (err) {
+    console.error('Analytics error:', err);
+    return new Response('Server Error', { status: 500 });
+  }
 };
 
 export { getBlogViews, getBlogViewsBySlug, getAnalytics, updateAnalytics, handleAnalytics }
