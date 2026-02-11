@@ -35,7 +35,10 @@ const getFlagEmoji = (countryCode: string) => {
 		.reduce((a, b) => `${a}${b}`)
 }
 
-const decodeUtf8 = (str: string) => decodeURIComponent(encodeURIComponent(str));
+const decodeCfHeader = (str: string | undefined) => {
+  if (!str) return 'Unknown';
+  return Buffer.from(str, 'latin1').toString('utf8');
+};
 
 const COUNTRY_MAP = {
   ABW: { alpha2: 'AW', name: 'Aruba' },
@@ -294,4 +297,4 @@ const getCountryName = (code2: string) => {
   return entry ? entry.name : code2; // fallback to code if not found
 };
 
-export { get_level, get_level_progress, get_next_level_xp, getFlagEmoji, decodeUtf8, getCountryName }
+export { get_level, get_level_progress, get_next_level_xp, getFlagEmoji, decodeCfHeader, getCountryName }

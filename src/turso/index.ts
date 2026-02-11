@@ -2,7 +2,7 @@ import { createClient } from '@libsql/client/web'
 import { drizzle } from 'drizzle-orm/libsql'
 import { sql, eq } from 'drizzle-orm'
 import { integer, numeric, sqliteTable, text } from 'drizzle-orm/sqlite-core'
-import { getFlagEmoji, decodeUtf8, getCountryName } from '../utils/helpers'
+import { getFlagEmoji, decodeCfHeader, getCountryName } from '../utils/helpers'
 
 const connection = () => {
 	return createClient({
@@ -282,7 +282,7 @@ const handleAnalytics = async (c: Context) => {
     const country = getCountryName(countrycode);
     const continent = c.req.header('cf-ipcontinent') || 'Unknown';
     const cityRaw = c.req.header('cf-ipcity') || 'Unknown';
-    const city = decodeUtf8(cityRaw);
+    const city = decodeCfHeader(cityRaw);
     const region = c.req.header('cf-region') || 'Unknown';
     const regioncode = c.req.header('cf-region-code') || 'Unknown';
     const latitude = parseFloat(c.req.header('cf-iplatitude') || '0');
@@ -315,7 +315,7 @@ const handleAnalytics = async (c: Context) => {
       latitude,
       longitude,
       timezone,
-      flag: getFlagEmoji(country),
+      flag: getFlagEmoji(countrycode),
     };
 
     await updateAnalytics(data);
