@@ -2,7 +2,7 @@ import { createClient } from '@libsql/client/web'
 import { drizzle } from 'drizzle-orm/libsql'
 import { sql, eq } from 'drizzle-orm'
 import { integer, numeric, sqliteTable, text } from 'drizzle-orm/sqlite-core'
-import { getFlagEmoji, decodeUtf8 } from '../utils/helpers'
+import { getFlagEmoji, decodeUtf8, getCountryName } from '../utils/helpers'
 
 const connection = () => {
 	return createClient({
