@@ -16,9 +16,11 @@ export const db = drizzle(connection())
 const analyticsTable = sqliteTable('analytics', {
   id: integer('id').primaryKey(),
   date: numeric('date').notNull(),
+
   title: text('title').notNull(),
   slug: text('slug').notNull(),
   referrer: text('referrer').notNull(),
+
   flag: text('flag').notNull(),
   countrycode: text('countrycode').notNull(),
   country: text('country').notNull(),
@@ -29,14 +31,20 @@ const analyticsTable = sqliteTable('analytics', {
   continent: text('continent').notNull().default('Unknown'),
   region: text('region').notNull().default('Unknown'),
   regioncode: text('regioncode').notNull().default('Unknown'),
+
   os: text('os').notNull().default('Unknown'),
+  osVersion: text('osVersion').notNull().default('Unknown'),
+
   browser: text('browser').notNull().default('Unknown'),
+  browserVersion: text('browserVersion').notNull().default('Unknown'),
+
+  deviceType: text('deviceType').notNull().default('Unknown'),
+  deviceVendor: text('deviceVendor').notNull().default('Unknown'),
+  deviceModel: text('deviceModel').notNull().default('Unknown'),
+
   userAgent: text('userAgent').notNull().default('Unknown'),
-  deviceType: text('deviceType'),
-  browserVersion: text('browserVersion'),
-  osVersion: text('osVersion'),
-  platform: text('platform'),
-  screenResolution: text('screenResolution'),
+  screenResolution: text('screenResolution').notNull().default('Unknown'),
+
   statusCode: integer('statusCode').notNull().default(0),
 });
 
@@ -182,6 +190,79 @@ const getAnalytics = async () => {
 		const totalCount = lastYearRes[0]?.total || 0
 		return totalCount
 	}
+	const browsers = async () => {
+		const topTenBrowsersStatement = sql`select browser, count(browser) as total from analytics group by browser order by total desc limit 10`
+		const topTenBrowsersRes = await db.all(topTenBrowsersStatement)
+		const topTenBrowsers2 = (
+			topTenBrowsersRes as {
+				browser: string | null
+				total: number
+			}[]
+		).map((item) => ({
+			browser: item.browser || 'Unknown',
+			total: item.total,
+		}))
+		return topTenBrowsers2
+	}
+	const operatingSystems = async () => {
+		const topTenOperatingSystemsStatement = sql`select os, count(os) as total from analytics group by os order by total desc limit 10`
+		const topTenOperatingSystemsRes = await db.all(topTenOperatingSystemsStatement)
+		const topTenOperatingSystems2 = (
+			topTenOperatingSystemsRes as {
+				os: string | null
+				total: number
+			}[]
+		).map((item) => ({
+			os: item.os || 'Unknown',
+			total: item.total,
+		}))
+		return topTenOperatingSystems2
+	}
+	const deviceTypes = async () => {
+			const topTenDevicesStatement = sql`select deviceType, count(deviceType) as total from analytics group by deviceType order by total desc limit 10`
+			const topTenDevicesRes = await db.all(topTenDevicesStatement)
+			const topTenDevices2 = (
+				topTenDevicesRes as {
+					deviceType: string | null
+					total: number
+				}[]
+			).map((item) => ({
+				device: item.deviceType || 'Unknown',
+				total: item.total,
+			}))
+			return topTenDevices2
+		}
+
+	const deviceVendors = async () => {
+			const topTenVendorsStatement = sql`select deviceVendor, count(deviceVendor) as total from analytics group by deviceVendor order by total desc limit 10`
+			const topTenVendorsRes = await db.all(topTenVendorsStatement)
+			const topTenVendors2 = (
+				topTenVendorsRes as {
+					deviceVendor: string | null
+					total: number
+				}[]
+			).map((item) => ({
+				device: item.deviceVendor || 'Unknown',
+				total: item.total,
+			}))
+			return topTenVendors2
+		}
+
+	const deviceModels = async () => {
+			const topTenModelsStatement = sql`select deviceModel, count(deviceModel) as total from analytics group by deviceModel order by total desc limit 10`
+			const topTenModelsRes = await db.all(topTenModelsStatement)
+			const topTenModels2 = (
+				topTenModelsRes as {
+					deviceModel: string | null
+					total: number
+				}[]
+			).map((item) => ({
+				device: item.deviceModel || 'Unknown',
+				total: item.total,
+			}))
+			return topTenModels2
+	    }
+
 
 	const lastDay = await lastDayStats()
 	const lastWeek = await lastWeekStats()
@@ -193,6 +274,11 @@ const getAnalytics = async () => {
 	const topTenSlugs = await slugs()
 	const topTenGeoLocations = await geoLocations()
 	const topTenDates = await dates()
+	const topTenBrowsers = await browsers()
+	const topTenOperatingSystems = await operatingSystems()
+	const topTenDeviceTypes = await deviceTypes()
+    const topTenDeviceVendors = await deviceVendors() 
+    const topTenDeviceModels = await deviceModels()
 	return {
 		lastDay,
 		lastWeek,
@@ -204,6 +290,11 @@ const getAnalytics = async () => {
 		topTenSlugs,
 		topTenGeoLocations,
 		topTenDates,
+		topTenBrowsers,
+		topTenOperatingSystems,
+		topTenDeviceTypes,
+        topTenDeviceVendors,
+        topTenDeviceModels,
 	}
 }
 
