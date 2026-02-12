@@ -37,6 +37,7 @@ const analyticsTable = sqliteTable('analytics', {
   osVersion: text('osVersion'),
   platform: text('platform'),
   screenResolution: text('screenResolution'),
+  statusCode: integer('statusCode').notNull().default(0),
 });
 
 const getBlogViews = async () => {
@@ -96,7 +97,7 @@ const getAnalytics = async () => {
 		return topTenCities2
 	}
 	const referrers = async () => {
-		const topTenReferrersStatement = sql`select referrer, count(referrer) as total from analytics where referrer not like '%.ahmetalmaz.com%' group by referrer order by count(referrer) desc limit 10`
+		const topTenReferrersStatement = sql`select referrer, count(referrer) as total from analytics where referrer not like '%.ahmetalmaz.com%' and statusCode = 200 group by referrer order by count(referrer) desc limit 10`
 		const topTenReferrersRes = await db.all(topTenReferrersStatement)
 		const topTenReferrers2 = (
 			topTenReferrersRes as { referrer: string | null; total: number }[]
@@ -107,7 +108,7 @@ const getAnalytics = async () => {
 		return topTenReferrers2
 	}
 	const slugs = async () => {
-		const topTenSlugsStatement = sql`select slug, title, count(slug) as total from analytics where title not like '%ahmetalmaz%' group by slug order by total desc limit 10`
+		const topTenSlugsStatement = sql`select slug, title, count(slug) as total from analytics where title not like '%ahmetalmaz%' and statusCode = 200 group by slug order by total desc limit 10`
 		const topTenSlugsRes = await db.all(topTenSlugsStatement)
 		const topTenSlugs2 = (
 			topTenSlugsRes as {
@@ -229,6 +230,7 @@ const updateAnalytics = async (data: {
   platform?: string;
   screenResolution?: string;
   userAgent?: string;
+  statusCode: number;
 }) => {
   const db = drizzle(connection());
   const date = new Date().toISOString()
@@ -257,6 +259,7 @@ const updateAnalytics = async (data: {
     platform: data.platform || '',
     screenResolution: data.screenResolution || '',
     userAgent: data.userAgent || 'Unknown',
+    statusCode: data.statusCode,
   });
 };
 
@@ -276,6 +279,7 @@ const handleAnalytics = async (c: Context) => {
       platform,
       screenResolution,
       userAgent,
+      statusCode,
     } = body;
 
     const countrycode = c.req.header('cf-ipcountry') || 'Unknown';
@@ -316,6 +320,7 @@ const handleAnalytics = async (c: Context) => {
       longitude,
       timezone,
       flag: getFlagEmoji(countrycode),
+      statusCode,
     };
 
     await updateAnalytics(data);
