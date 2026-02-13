@@ -14,38 +14,41 @@ const connection = () => {
 export const db = drizzle(connection())
 
 const analyticsTable = sqliteTable('analytics', {
-  id: integer('id').primaryKey(),
-  date: numeric('date').notNull(),
+	id: integer('id').primaryKey(),
+	date: numeric('date').notNull(),
 
-  title: text('title').notNull(),
-  slug: text('slug').notNull(),
-  referrer: text('referrer').notNull(),
+	title: text('title').notNull(),
+	slug: text('slug').notNull(),
+	referrer: text('referrer').notNull(),
 
-  flag: text('flag').notNull(),
-  countrycode: text('countrycode').notNull(),
-  country: text('country').notNull(),
-  city: text('city').notNull(),
-  latitude: numeric('latitude'),
-  longitude: numeric('longitude'),
-  timezone: text('timezone').notNull(),
-  continent: text('continent').notNull().default('Unknown'),
-  region: text('region').notNull().default('Unknown'),
-  regioncode: text('regioncode').notNull().default('Unknown'),
+	flag: text('flag').notNull(),
+	countrycode: text('countrycode').notNull(),
+	country: text('country').notNull(),
+	city: text('city').notNull(),
+	latitude: numeric('latitude'),
+	longitude: numeric('longitude'),
+	timezone: text('timezone').notNull(),
+	continent: text('continent').notNull().default('Unknown'),
+	region: text('region').notNull().default('Unknown'),
+	regioncode: text('regioncode').notNull().default('Unknown'),
 
-  os: text('os').notNull().default('Unknown'),
-  osVersion: text('osVersion').notNull().default('Unknown'),
+	os: text('os').notNull().default('Unknown'),
+	osVersion: text('osVersion').notNull().default('Unknown'),
 
-  browser: text('browser').notNull().default('Unknown'),
-  browserVersion: text('browserVersion').notNull().default('Unknown'),
+	browser: text('browser').notNull().default('Unknown'),
+	browserVersion: text('browserVersion').notNull().default('Unknown'),
 
-  deviceType: text('deviceType').notNull().default('Unknown'),
-  deviceVendor: text('deviceVendor').notNull().default('Unknown'),
-  deviceModel: text('deviceModel').notNull().default('Unknown'),
+	engine: text('engine').notNull().default('Unknown'),
+	engineVersion: text('engineVersion').notNull().default('Unknown'),
 
-  userAgent: text('userAgent').notNull().default('Unknown'),
-  screenResolution: text('screenResolution').notNull().default('Unknown'),
+	deviceType: text('deviceType').notNull().default('Unknown'),
+	deviceVendor: text('deviceVendor').notNull().default('Unknown'),
+	deviceModel: text('deviceModel').notNull().default('Unknown'),
 
-  statusCode: integer('statusCode').notNull().default(0),
+	userAgent: text('userAgent').notNull().default('Unknown'),
+	screenResolution: text('screenResolution').notNull().default('Unknown'),
+
+	statusCode: integer('statusCode').notNull().default(0),
 });
 
 const getBlogViews = async () => {
@@ -219,49 +222,49 @@ const getAnalytics = async () => {
 		return topTenOperatingSystems2
 	}
 	const deviceTypes = async () => {
-			const topTenDevicesStatement = sql`select deviceType, count(deviceType) as total from analytics group by deviceType order by total desc limit 10`
-			const topTenDevicesRes = await db.all(topTenDevicesStatement)
-			const topTenDevices2 = (
-				topTenDevicesRes as {
-					deviceType: string | null
-					total: number
-				}[]
-			).map((item) => ({
-				device: item.deviceType || 'Unknown',
-				total: item.total,
-			}))
-			return topTenDevices2
-		}
+		const topTenDevicesStatement = sql`select deviceType, count(deviceType) as total from analytics group by deviceType order by total desc limit 10`
+		const topTenDevicesRes = await db.all(topTenDevicesStatement)
+		const topTenDevices2 = (
+			topTenDevicesRes as {
+				deviceType: string | null
+				total: number
+			}[]
+		).map((item) => ({
+			device: item.deviceType || 'Unknown',
+			total: item.total,
+		}))
+		return topTenDevices2
+	}
 
 	const deviceVendors = async () => {
-			const topTenVendorsStatement = sql`select deviceVendor, count(deviceVendor) as total from analytics group by deviceVendor order by total desc limit 10`
-			const topTenVendorsRes = await db.all(topTenVendorsStatement)
-			const topTenVendors2 = (
-				topTenVendorsRes as {
-					deviceVendor: string | null
-					total: number
-				}[]
-			).map((item) => ({
-				device: item.deviceVendor || 'Unknown',
-				total: item.total,
-			}))
-			return topTenVendors2
-		}
+		const topTenVendorsStatement = sql`select deviceVendor, count(deviceVendor) as total from analytics group by deviceVendor order by total desc limit 10`
+		const topTenVendorsRes = await db.all(topTenVendorsStatement)
+		const topTenVendors2 = (
+			topTenVendorsRes as {
+				deviceVendor: string | null
+				total: number
+			}[]
+		).map((item) => ({
+			device: item.deviceVendor || 'Unknown',
+			total: item.total,
+		}))
+		return topTenVendors2
+	}
 
 	const deviceModels = async () => {
-			const topTenModelsStatement = sql`select deviceModel, count(deviceModel) as total from analytics group by deviceModel order by total desc limit 10`
-			const topTenModelsRes = await db.all(topTenModelsStatement)
-			const topTenModels2 = (
-				topTenModelsRes as {
-					deviceModel: string | null
-					total: number
-				}[]
-			).map((item) => ({
-				device: item.deviceModel || 'Unknown',
-				total: item.total,
-			}))
-			return topTenModels2
-	    }
+		const topTenModelsStatement = sql`select deviceModel, count(deviceModel) as total from analytics group by deviceModel order by total desc limit 10`
+		const topTenModelsRes = await db.all(topTenModelsStatement)
+		const topTenModels2 = (
+			topTenModelsRes as {
+				deviceModel: string | null
+				total: number
+			}[]
+		).map((item) => ({
+			device: item.deviceModel || 'Unknown',
+			total: item.total,
+		}))
+		return topTenModels2
+	}
 
 
 	const lastDay = await lastDayStats()
@@ -277,8 +280,8 @@ const getAnalytics = async () => {
 	const topTenBrowsers = await browsers()
 	const topTenOperatingSystems = await operatingSystems()
 	const topTenDeviceTypes = await deviceTypes()
-    const topTenDeviceVendors = await deviceVendors() 
-    const topTenDeviceModels = await deviceModels()
+	const topTenDeviceVendors = await deviceVendors()
+	const topTenDeviceModels = await deviceModels()
 	return {
 		lastDay,
 		lastWeek,
@@ -293,137 +296,145 @@ const getAnalytics = async () => {
 		topTenBrowsers,
 		topTenOperatingSystems,
 		topTenDeviceTypes,
-        topTenDeviceVendors,
-        topTenDeviceModels,
+		topTenDeviceVendors,
+		topTenDeviceModels,
 	}
 }
 
 const updateAnalytics = async (data: {
-  title: string;
-  slug: string;
-  referrer: string;
-  countrycode: string;
-  country: string;
-  continent?: string;
-  region?: string;
-  regioncode?: string;
-  city: string;
-  latitude?: number;
-  longitude?: number;
-  timezone?: string;
-  flag: string;
-  browser?: string;
-  browserVersion?: string;
-  deviceType?: string;
-  language?: string;
-  os?: string;
-  osVersion?: string;
-  platform?: string;
-  screenResolution?: string;
-  userAgent?: string;
-  statusCode: number;
+	title: string;
+	slug: string;
+	referrer: string;
+	countrycode: string;
+	country: string;
+	continent?: string;
+	region?: string;
+	regioncode?: string;
+	city: string;
+	latitude?: number;
+	longitude?: number;
+	timezone?: string;
+	flag: string;
+	browser?: string;
+	browserVersion?: string;
+	engine?: string;
+	engineVersion?: string;
+	deviceType?: string;
+	deviceVendor?: string;
+	deviceModel?: string;
+	language?: string;
+	os?: string;
+	osVersion?: string;
+	screenResolution?: string;
+	userAgent?: string;
+	statusCode: number;
 }) => {
-  const db = drizzle(connection());
-  const date = new Date().toISOString()
+	const db = drizzle(connection());
+	const date = new Date().toISOString()
 
-  await db.insert(analyticsTable).values({
-    date,
-    title: data.title,
-    slug: data.slug,
-    referrer: data.referrer,
-    flag: data.flag,
-    countrycode: data.countrycode,
-    country: data.country,
-    continent: data.continent || 'Unknown',
-    region: data.region || 'Unknown',
-    regioncode: data.regioncode || 'Unknown',
-    city: data.city,
-    latitude: data.latitude ?? 0,
-    longitude: data.longitude ?? 0,
-    timezone: data.timezone || 'Unknown',
-    browser: data.browser || 'Unknown',
-    browserVersion: data.browserVersion || '',
-    deviceType: data.deviceType || '',
-    language: data.language || '',
-    os: data.os || 'Unknown',
-    osVersion: data.osVersion || '',
-    platform: data.platform || '',
-    screenResolution: data.screenResolution || '',
-    userAgent: data.userAgent || 'Unknown',
-    statusCode: data.statusCode,
-  });
+	await db.insert(analyticsTable).values({
+		date,
+		title: data.title,
+		slug: data.slug,
+		referrer: data.referrer,
+		flag: data.flag,
+		countrycode: data.countrycode,
+		country: data.country,
+		continent: data.continent || 'Unknown',
+		region: data.region || 'Unknown',
+		regioncode: data.regioncode || 'Unknown',
+		city: data.city,
+		latitude: data.latitude ?? 0,
+		longitude: data.longitude ?? 0,
+		timezone: data.timezone || 'Unknown',
+		browser: data.browser || 'Unknown',
+		browserVersion: data.browserVersion || '',
+		engine: data.engine || 'Unknown',
+		engineVersion: data.engineVersion || '',
+		deviceType: data.deviceType || '',
+		deviceVendor: data.deviceVendor || '',
+		deviceModel: data.deviceModel || '',
+		language: data.language || '',
+		os: data.os || 'Unknown',
+		osVersion: data.osVersion || '',
+		screenResolution: data.screenResolution || '',
+		userAgent: data.userAgent || 'Unknown',
+		statusCode: data.statusCode,
+	});
 };
 
 const handleAnalytics = async (c: Context) => {
-  try {
-    const body = await c.req.json();
-    const {
-      title,
-      slug,
-      referrer,
-      browser,
-      browserVersion,
-      deviceType,
-      language,
-      os,
-      osVersion,
-      platform,
-      screenResolution,
-      userAgent,
-      statusCode,
-    } = body;
+	try {
+		const body = await c.req.json();
+		const {
+			title,
+			slug,
+			referrer,
+			browser,
+			browserVersion,
+			deviceType,
+			deviceVendor,
+			deviceModel,
+			language,
+			os,
+			osVersion,
+			screenResolution,
+			userAgent,
+			statusCode,
+		} = body;
 
-    const countrycode = c.req.header('cf-ipcountry') || 'Unknown';
-    const country = getCountryName(countrycode);
-    const continent = c.req.header('cf-ipcontinent') || 'Unknown';
-    const cityRaw = c.req.header('cf-ipcity') || 'Unknown';
-    const city = decodeCfHeader(cityRaw);
-    const region = c.req.header('cf-region') || 'Unknown';
-    const regioncode = c.req.header('cf-region-code') || 'Unknown';
-    const latitude = parseFloat(c.req.header('cf-iplatitude') || '0');
-    const longitude = parseFloat(c.req.header('cf-iplongitude') || '0');
-    const timezone = c.req.header('cf-timezone') || 'Unknown'
+		const countrycode = c.req.header('cf-ipcountry') || 'Unknown';
+		const country = getCountryName(countrycode);
+		const continent = c.req.header('cf-ipcontinent') || 'Unknown';
+		const cityRaw = c.req.header('cf-ipcity') || 'Unknown';
+		const city = decodeCfHeader(cityRaw);
+		const region = c.req.header('cf-region') || 'Unknown';
+		const regioncode = c.req.header('cf-region-code') || 'Unknown';
+		const latitude = parseFloat(c.req.header('cf-iplatitude') || '0');
+		const longitude = parseFloat(c.req.header('cf-iplongitude') || '0');
+		const timezone = c.req.header('cf-timezone') || 'Unknown'
 
-    if (!title || !slug || !referrer) {
-      return new Response('Missing required body data', { status: 400 });
-    }
+		if (!title || !slug || !referrer) {
+			return new Response('Missing required body data', { status: 400 });
+		}
 
-    const data = {
-      title,
-      slug,
-      referrer,
-      browser: browser || 'Unknown',
-      browserVersion: browserVersion || '',
-      deviceType: deviceType || '',
-      language: language || '',
-      os: os || 'Unknown',
-      osVersion: osVersion || '',
-      platform: platform || '',
-      screenResolution: screenResolution || '',
-      userAgent: userAgent || 'Unknown',
-      countrycode,
-      country,
-      continent,
-      region,
-      regioncode,
-      city,
-      latitude,
-      longitude,
-      timezone,
-      flag: getFlagEmoji(countrycode),
-      statusCode,
-    };
+		const data = {
+			title,
+			slug,
+			referrer,
+			browser: browser || 'Unknown',
+			browserVersion: browserVersion || '',
+			deviceType: deviceType || '',
+			deviceVendor: deviceVendor || '',
+			deviceModel: deviceModel || '',
+			language: language || '',
+			os: os || 'Unknown',
+			osVersion: osVersion || '',
+			screenResolution: screenResolution || '',
+			userAgent: userAgent || 'Unknown',
+			countrycode,
+			country,
+			continent,
+			region,
+			regioncode,
+			city,
+			latitude,
+			longitude,
+			timezone,
+			flag: getFlagEmoji(countrycode),
+			statusCode,
+		};
 
-    await updateAnalytics(data);
+		await updateAnalytics(data);
 
-    return new Response(
-      JSON.stringify({ message: 'A Ok!' }),
-      { headers: { 'Content-Type': 'application/json' } }
-    );
-  } catch (err) {
-    console.error('Analytics error:', err);
-    return new Response('Server Error', { status: 500 });
-  }
+		return new Response(
+			JSON.stringify({ message: 'A Ok!' }),
+			{ headers: { 'Content-Type': 'application/json' } }
+		);
+	} catch (err) {
+		console.error('Analytics error:', err);
+		return new Response('Server Error', { status: 500 });
+	}
 };
 
 export { getBlogViews, getBlogViewsBySlug, getAnalytics, updateAnalytics, handleAnalytics }
