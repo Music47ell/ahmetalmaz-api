@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { bearerAuth } from "hono/bearer-auth";
 import { cors } from "hono/cors";
+import { redis } from "../util/redisClient.js";
 import { getCodeStatsStats } from "../src/codestats/stats.js";
 import { getTopLanguages } from "../src/codestats/topLanguages.js";
 import { getFullMessage } from "../src/curl-card/index.js";
