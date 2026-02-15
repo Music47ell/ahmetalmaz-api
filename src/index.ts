@@ -83,17 +83,30 @@ app.get("/codestats/top-languages", async (c) =>
 // app.use("/insight/*", bearerAuth({ token: process.env.INSIGHT_TOKEN }));
 app.post("/correct-horse-battery-staple", (c) => handleAnalytics(c));
 app.post("/heartbeat", async (c) => {
-  const { visitorId } = await c.req.json();
+  const { visitorId, slug } = await c.req.json();
   if (!visitorId) return c.json({ error: "Missing visitorId" }, 400);
 
-  // store visitorId in Redis with 30s TTL
-  await redis.set(`online:${visitorId}`, "1", "EX", 30);
+  // store visitorId + slug with 30s TTL
+  await redis.set(`online:${visitorId}`, slug || "/", "EX", 30);
 
   return c.json({ ok: true });
 });
 app.get("/online", async (c) => {
   const keys = await redis.keys("online:*");
-  return c.json({ total: keys.length });
+  const pipeline = redis.pipeline();
+
+  keys.forEach((key) => pipeline.get(key));
+  const pages = await pipeline.exec();
+
+  // pages is [[null, slug], ...] so map to slugs only
+  const onlinePages: Record<string, number> = {};
+
+  pages.forEach(([, slug]) => {
+    const s = slug || "/";
+    onlinePages[s] = (onlinePages[s] || 0) + 1;
+  });
+
+  return c.json({ total: keys.length, pages: onlinePages });
 });
 
 app.get("/insight", async (c) => c.json(await getAnalytics()));
