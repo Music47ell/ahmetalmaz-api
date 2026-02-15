@@ -82,14 +82,7 @@ app.get("/codestats/top-languages", async (c) =>
 
 // app.use("/insight/*", bearerAuth({ token: process.env.INSIGHT_TOKEN }));
 app.post("/correct-horse-battery-staple", (c) => handleAnalytics(c));
-app.get("/insight", async (c) => c.json(await getAnalytics()));
-app.get("/insight/:slug", async (c) => {
-	const { slug } = c.req.param();
-	const views = await getBlogViewsBySlug(slug);
-	return c.json({ views });
-});
-
-app.post("/insight/heartbeat", async (c) => {
+app.post("/heartbeat", async (c) => {
   const { visitorId } = await c.req.json();
   if (!visitorId) return c.json({ error: "Missing visitorId" }, 400);
 
@@ -98,9 +91,16 @@ app.post("/insight/heartbeat", async (c) => {
 
   return c.json({ ok: true });
 });
-app.get("/insight/online", async (c) => {
+app.get("/online", async (c) => {
   const keys = await redis.keys("online:*");
   return c.json({ total: keys.length });
+});
+
+app.get("/insight", async (c) => c.json(await getAnalytics()));
+app.get("/insight/:slug", async (c) => {
+	const { slug } = c.req.param();
+	const views = await getBlogViewsBySlug(slug);
+	return c.json({ views });
 });
 
 app.get("/goodreads/stats", async (c) => c.json(await getGoodreadsStats()));
