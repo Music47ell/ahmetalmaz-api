@@ -14,42 +14,45 @@ const connection = () => {
 export const db = drizzle(connection())
 
 const analyticsTable = sqliteTable('analytics', {
-	id: integer('id').primaryKey(),
-	date: numeric('date').notNull(),
+  id: integer("id").primaryKey(),
+  timestamp: numeric("timestamp").notNull().default(sql`(strftime('%s','now') * 1000)`),
 
-	title: text('title').notNull(),
-	slug: text('slug').notNull(),
-	referrer: text('referrer').notNull(),
+  visitorId: text("visitorId").notNull(),
+  sessionId: text("sessionId").notNull(),
+  eventType: text("eventType").notNull(),
+  eventName: text("eventName").notNull().default(''),
 
-	flag: text('flag').notNull(),
-	countrycode: text('countrycode').notNull(),
-	country: text('country').notNull(),
-	city: text('city').notNull(),
-	latitude: numeric('latitude'),
-	longitude: numeric('longitude'),
-	timezone: text('timezone').notNull(),
-	continent: text('continent').notNull().default('Unknown'),
-	region: text('region').notNull().default('Unknown'),
-	regioncode: text('regioncode').notNull().default('Unknown'),
+  title: text("title").notNull().default(''),
+  slug: text("slug").notNull().default(''),
+  referrer: text("referrer").notNull().default(''),
+  statusCode: integer("statusCode").notNull().default(0),
 
-	os: text('os').notNull().default('Unknown'),
-	osVersion: text('osVersion').notNull().default('Unknown'),
+  os: text("os").notNull().default('Unknown'),
+  osVersion: text("osVersion").notNull().default('Unknown'),
+  browser: text("browser").notNull().default('Unknown'),
+  browserVersion: text("browserVersion").notNull().default('Unknown'),
+  engine: text("engine").notNull().default('Unknown'),
+  engineVersion: text("engineVersion").notNull().default('Unknown'),
+  deviceType: text("deviceType").notNull().default('Unknown'),
+  deviceVendor: text("deviceVendor").notNull().default('Unknown'),
+  deviceModel: text("deviceModel").notNull().default('Unknown'),
 
-	browser: text('browser').notNull().default('Unknown'),
-	browserVersion: text('browserVersion').notNull().default('Unknown'),
+  flag: text("flag").notNull().default(''),
+  country: text("country").notNull().default('Unknown'),
+  countryCode: text("countryCode").notNull().default('Unknown'),
+  city: text("city").notNull().default('Unknown'),
+  latitude: numeric("latitude"),
+  longitude: numeric("longitude"),
+  timezone: text("timezone").notNull().default('Unknown'),
+  continent: text("continent").notNull().default('Unknown'),
+  region: text("region").notNull().default('Unknown'),
+  regionCode: text("regionCode").notNull().default('Unknown'),
+  language: text('language').notNull().default('Unknown'),
 
-	engine: text('engine').notNull().default('Unknown'),
-	engineVersion: text('engineVersion').notNull().default('Unknown'),
-
-	deviceType: text('deviceType').notNull().default('Unknown'),
-	deviceVendor: text('deviceVendor').notNull().default('Unknown'),
-	deviceModel: text('deviceModel').notNull().default('Unknown'),
-
-	userAgent: text('userAgent').notNull().default('Unknown'),
-	screenResolution: text('screenResolution').notNull().default('Unknown'),
-
-	statusCode: integer('statusCode').notNull().default(0),
+  userAgent: text("userAgent").notNull().default(''),
+  screenResolution: text("screenResolution").notNull().default(''),
 });
+
 
 const getBlogViews = async () => {
 	const db = drizzle(connection())
@@ -134,65 +137,7 @@ const getAnalytics = async () => {
 		}))
 		return topTenSlugs2
 	}
-	const geoLocations = async () => {
-		const topTenGeoLocationsStatement = sql`select country, latitude, longitude, count(latitude) as total from analytics where date > date('now', '-30 days') group by latitude, longitude order by total desc limit 10`
-		const topTenGeoLocationsRes = await db.all(topTenGeoLocationsStatement)
-		const topTenGeoLocations2 = (
-			topTenGeoLocationsRes as {
-				country: string | null
-				latitude: string | null
-				longitude: string | null
-				total: number
-			}[]
-		).map((item) => ({
-			country: item.country || 'Unknown',
-			latitude: item.latitude || '0',
-			longitude: item.longitude || '0',
-			total: item.total,
-		}))
-		return topTenGeoLocations2
-	}
-	const dates = async () => {
-		const topTenDatesStatement = sql`select date, count(date) as total from analytics where date > date('now', '-30 days') group by date order by total desc limit 10`
-		const topTenDatesRes = await db.all(topTenDatesStatement)
-		const topTenDates2 = (
-			topTenDatesRes as { date: string | null; total: number }[]
-		).map((item) => ({
-			date: item.date || 'Unknown',
-			total: item.total,
-		}))
-		return topTenDates2
-	}
-	const lastDayStats = async () => {
-		const lastDayStatement = sql`select count(date) as total from analytics where date > date('now', '-1 days')`
-		const lastDayRes = (await db.all(lastDayStatement)) as { total: number }[]
 
-		const totalCount = lastDayRes[0]?.total || 0
-
-		return totalCount
-	}
-	const lastWeekStats = async () => {
-		const lastWeekStatement = sql`select count(date) as total from analytics where date > date('now', '-7 days')`
-		const lastWeekRes = (await db.all(lastWeekStatement)) as { total: number }[]
-		const totalCount = lastWeekRes[0]?.total || 0
-		return totalCount
-	}
-
-	const lastMonthStats = async () => {
-		const lastMonthStatement = sql`select count(date) as total from analytics where date > date('now', '-30 days')`
-		const lastMonthRes = (await db.all(lastMonthStatement)) as {
-			total: number
-		}[]
-		const totalCount = lastMonthRes[0]?.total || 0
-		return totalCount
-	}
-
-	const lastYearStats = async () => {
-		const lastYearStatement = sql`select count(date) as total from analytics where date > date('now', '-365 days')`
-		const lastYearRes = (await db.all(lastYearStatement)) as { total: number }[]
-		const totalCount = lastYearRes[0]?.total || 0
-		return totalCount
-	}
 	const browsers = async () => {
 		const topTenBrowsersStatement = sql`select browser, count(browser) as total from analytics group by browser order by total desc limit 10`
 		const topTenBrowsersRes = await db.all(topTenBrowsersStatement)
@@ -207,6 +152,7 @@ const getAnalytics = async () => {
 		}))
 		return topTenBrowsers2
 	}
+
 	const operatingSystems = async () => {
 		const topTenOperatingSystemsStatement = sql`select os, count(os) as total from analytics group by os order by total desc limit 10`
 		const topTenOperatingSystemsRes = await db.all(topTenOperatingSystemsStatement)
@@ -230,86 +176,194 @@ const getAnalytics = async () => {
 				total: number
 			}[]
 		).map((item) => ({
-			device: item.deviceType || 'Unknown',
+			type: item.deviceType || 'Unknown',
 			total: item.total,
 		}))
 		return topTenDevices2
 	}
 
-	const deviceVendors = async () => {
-		const topTenVendorsStatement = sql`select deviceVendor, count(deviceVendor) as total from analytics group by deviceVendor order by total desc limit 10`
-		const topTenVendorsRes = await db.all(topTenVendorsStatement)
-		const topTenVendors2 = (
-			topTenVendorsRes as {
-				deviceVendor: string | null
-				total: number
-			}[]
-		).map((item) => ({
-			device: item.deviceVendor || 'Unknown',
-			total: item.total,
-		}))
-		return topTenVendors2
+	const pageViewsStats = async () => {
+		const pageViewsStatement = sql`
+			select count(*) as total
+			from analytics
+			where eventType = 'pageview'
+			and timestamp > (strftime('%s','now','-30 days') * 1000)
+		`
+		const pageViewsRes = (await db.all(pageViewsStatement)) as {
+			total: number
+		}[]
+		const totalCount = pageViewsRes[0]?.total || 0
+		return totalCount
 	}
 
-	const deviceModels = async () => {
-		const topTenModelsStatement = sql`select deviceModel, count(deviceModel) as total from analytics group by deviceModel order by total desc limit 10`
-		const topTenModelsRes = await db.all(topTenModelsStatement)
-		const topTenModels2 = (
-			topTenModelsRes as {
-				deviceModel: string | null
-				total: number
-			}[]
-		).map((item) => ({
-			device: item.deviceModel || 'Unknown',
-			total: item.total,
-		}))
-		return topTenModels2
+	const visitsStats = async () => {
+		const visitsStatement = sql`
+			select count(distinct sessionId) as total
+			from analytics
+			where eventType = 'pageview'
+			and timestamp > (strftime('%s','now','-30 days') * 1000)
+		`
+		const visitsRes = (await db.all(visitsStatement)) as {
+			total: number
+		}[]
+		const totalCount = visitsRes[0]?.total || 0
+		return totalCount
 	}
 
+	const visitorsStats = async () => {
+		const visitorsStatement = sql`
+			select count(distinct visitorId) as total
+			from analytics
+			where eventType = 'pageview'
+			and timestamp > (strftime('%s','now','-30 days') * 1000)
+		`
+		const visitorsRes = (await db.all(visitorsStatement)) as {
+			total: number
+		}[]
+		const totalCount = visitorsRes[0]?.total || 0
+		return totalCount
+	}
 
-	const lastDay = await lastDayStats()
-	const lastWeek = await lastWeekStats()
-	const lastMonth = await lastMonthStats()
-	const lastYear = await lastYearStats()
-	const topTenCountries = await countries()
-	const topTenCities = await cities()
-	const topTenReferrers = await referrers()
-	const topTenSlugs = await slugs()
-	const topTenGeoLocations = await geoLocations()
-	const topTenDates = await dates()
-	const topTenBrowsers = await browsers()
-	const topTenOperatingSystems = await operatingSystems()
-	const topTenDeviceTypes = await deviceTypes()
-	const topTenDeviceVendors = await deviceVendors()
-	const topTenDeviceModels = await deviceModels()
+	const visitDurationStats = async () => {
+		const visitDurationStatement = sql`
+			select avg(sessionDuration) as total from (
+				select (max(timestamp) - min(timestamp)) as sessionDuration
+				from analytics
+				where eventType = 'pageview'
+				and timestamp > (strftime('%s','now','-30 days') * 1000)
+				group by sessionId
+			)
+		`
+		const visitDurationRes = (await db.all(visitDurationStatement)) as {
+			total: number
+		}[]
+		const totalCount = visitDurationRes[0]?.total || 0
+		return totalCount
+	}
+
+	const bounceRateStats = async () => {
+		const bounceRateStatement = sql`
+			select (
+				select count(*) from (
+					select sessionId
+					from analytics
+					where eventType = 'pageview'
+					and timestamp > (strftime('%s','now','-30 days') * 1000)
+					group by sessionId
+					having count(*) = 1
+				)
+			) * 100.0 /
+			(select count(distinct sessionId) from analytics where eventType = 'pageview' and timestamp > (strftime('%s','now','-30 days') * 1000))
+			as total
+		`
+		const bounceRateRes = (await db.all(bounceRateStatement)) as {
+			total: number
+		}[]
+		const totalCount = bounceRateRes[0]?.total || 0
+		return totalCount
+	}
+
+	const entryPagesStats = async () => {
+		const entryPagesStatement = sql`
+			select slug, count(*) as total from (
+				select slug
+				from analytics a
+				where eventType = 'pageview'
+				and timestamp > (strftime('%s','now','-30 days') * 1000)
+				and timestamp = (
+					select min(timestamp)
+					from analytics
+					where sessionId = a.sessionId
+					and eventType = 'pageview'
+				)
+			)
+			group by slug
+			order by total desc
+		`
+		const entryPagesRes = await db.all(entryPagesStatement)
+		return entryPagesRes
+	}
+
+	const exitPagesStats = async () => {
+		const exitPagesStatement = sql`
+			select slug, count(*) as total from (
+				select slug
+				from analytics a
+				where eventType = 'pageview'
+				and timestamp > (strftime('%s','now','-30 days') * 1000)
+				and timestamp = (
+					select max(timestamp)
+					from analytics
+					where sessionId = a.sessionId
+					and eventType = 'pageview'
+				)
+			)
+			group by slug
+			order by total desc
+		`
+		const exitPagesRes = await db.all(exitPagesStatement)
+		return exitPagesRes
+	}
+
+	const languageStats = async () => {
+		const stmt = sql`
+		  SELECT language, COUNT(*) AS total
+		  FROM analytics
+		  WHERE timestamp > (strftime('%s','now','-30 days') * 1000)
+		  GROUP BY language
+		  ORDER BY total DESC
+		`
+		const res = await db.all(stmt)
+		return res
+	}
+
+	const monthlyCountries = await countries()
+	const monthlyCities = await cities()
+	const monthlyReferrers = await referrers()
+	const monthlySlugs = await slugs()
+	const monthlyBrowsers = await browsers()
+	const monthlyOperatingSystems = await operatingSystems()
+	const monthlyDeviceTypes = await deviceTypes()
+    const monthlyPageViewsStats = await pageViewsStats()
+    const monthlyVisitsStats = await visitsStats()
+    const monthlyVisitorsStats = await visitorsStats()
+    const monthlyVisitDurationStats = await visitDurationStats()
+    const monthlyBounceRateStats = await bounceRateStats()
+    const monthlyEntryPagesStats = await entryPagesStats()
+    const monthlyExitPagesStats = await exitPagesStats()
+    const monthlyLanguageStats = await languageStats()
 	return {
-		lastDay,
-		lastWeek,
-		lastMonth,
-		lastYear,
-		topTenCountries,
-		topTenCities,
-		topTenReferrers,
-		topTenSlugs,
-		topTenGeoLocations,
-		topTenDates,
-		topTenBrowsers,
-		topTenOperatingSystems,
-		topTenDeviceTypes,
-		topTenDeviceVendors,
-		topTenDeviceModels,
+		monthlyPageViewsStats,
+		monthlyVisitsStats,
+		monthlyVisitorsStats,
+		monthlyVisitDurationStats,
+		monthlyBounceRateStats,
+		monthlyEntryPagesStats,
+		monthlyExitPagesStats,
+		monthlyLanguageStats,
+		monthlyCountries,
+		monthlyCities,
+		monthlyReferrers,
+		monthlySlugs,
+		monthlyBrowsers,
+		monthlyOperatingSystems,
+		monthlyDeviceTypes,
 	}
 }
 
 const updateAnalytics = async (data: {
+	visitorId: string;
+	sessionId: string;
+	eventType: string;
+	eventName?: string;
 	title: string;
 	slug: string;
 	referrer: string;
-	countrycode: string;
+	countryCode: string;
 	country: string;
 	continent?: string;
 	region?: string;
-	regioncode?: string;
+	regionCode?: string;
 	city: string;
 	latitude?: number;
 	longitude?: number;
@@ -330,19 +384,21 @@ const updateAnalytics = async (data: {
 	statusCode: number;
 }) => {
 	const db = drizzle(connection());
-	const date = new Date().toISOString()
 
 	await db.insert(analyticsTable).values({
-		date,
+		visitorId: data.visitorId,
+		sessionId: data.sessionId,
+		eventType: data.eventType,
+		eventName: data.eventName || '',
 		title: data.title,
 		slug: data.slug,
 		referrer: data.referrer,
 		flag: data.flag,
-		countrycode: data.countrycode,
+		countryCode: data.countryCode,
 		country: data.country,
 		continent: data.continent || 'Unknown',
 		region: data.region || 'Unknown',
-		regioncode: data.regioncode || 'Unknown',
+		regionCode: data.regionCode || 'Unknown',
 		city: data.city,
 		latitude: data.latitude ?? 0,
 		longitude: data.longitude ?? 0,
@@ -351,9 +407,9 @@ const updateAnalytics = async (data: {
 		browserVersion: data.browserVersion || '',
 		engine: data.engine || 'Unknown',
 		engineVersion: data.engineVersion || '',
-		deviceType: data.deviceType || '',
-		deviceVendor: data.deviceVendor || '',
-		deviceModel: data.deviceModel || '',
+		deviceType: data.deviceType || 'Unknown',
+		deviceVendor: data.deviceVendor || 'Unknown',
+		deviceModel: data.deviceModel || 'Unknown',
 		language: data.language || '',
 		os: data.os || 'Unknown',
 		osVersion: data.osVersion || '',
@@ -367,11 +423,17 @@ const handleAnalytics = async (c: Context) => {
 	try {
 		const body = await c.req.json();
 		const {
+			visitorId,
+			sessionId,
+			eventType,
+			eventName,
 			title,
 			slug,
 			referrer,
 			browser,
 			browserVersion,
+			engine,
+			engineVersion,
 			deviceType,
 			deviceVendor,
 			deviceModel,
@@ -383,45 +445,52 @@ const handleAnalytics = async (c: Context) => {
 			statusCode,
 		} = body;
 
-		const countrycode = c.req.header('cf-ipcountry') || 'Unknown';
-		const country = getCountryName(countrycode);
+		const countryCode = c.req.header('cf-ipcountry') || 'Unknown';
+		const country = getCountryName(countryCode);
 		const continent = c.req.header('cf-ipcontinent') || 'Unknown';
 		const cityRaw = c.req.header('cf-ipcity') || 'Unknown';
 		const city = decodeCfHeader(cityRaw);
 		const region = c.req.header('cf-region') || 'Unknown';
-		const regioncode = c.req.header('cf-region-code') || 'Unknown';
+		const regionCode = c.req.header('cf-region-code') || 'Unknown';
 		const latitude = parseFloat(c.req.header('cf-iplatitude') || '0');
 		const longitude = parseFloat(c.req.header('cf-iplongitude') || '0');
-		const timezone = c.req.header('cf-timezone') || 'Unknown'
+		const timezone = c.req.header('cf-timezone') || 'Unknown';
+		const flag = getFlagEmoji(countryCode);
 
-		if (!title || !slug || !referrer) {
+		if (!visitorId || !sessionId || !eventType || !title || !slug || !referrer) {
 			return new Response('Missing required body data', { status: 400 });
 		}
 
 		const data = {
+			visitorId,
+			sessionId,
+			eventType,
+			eventName,
 			title,
 			slug,
 			referrer,
 			browser: browser || 'Unknown',
 			browserVersion: browserVersion || '',
-			deviceType: deviceType || '',
-			deviceVendor: deviceVendor || '',
-			deviceModel: deviceModel || '',
+			engine: engine || 'Unknown',
+			engineVersion: engineVersion || '',
+			deviceType: deviceType || 'Unknown',
+			deviceVendor: deviceVendor || 'Unknown',
+			deviceModel: deviceModel || 'Unknown',
 			language: language || '',
 			os: os || 'Unknown',
 			osVersion: osVersion || '',
 			screenResolution: screenResolution || '',
 			userAgent: userAgent || 'Unknown',
-			countrycode,
+			countryCode,
 			country,
 			continent,
 			region,
-			regioncode,
+			regionCode,
 			city,
 			latitude,
 			longitude,
 			timezone,
-			flag: getFlagEmoji(countrycode),
+			flag,
 			statusCode,
 		};
 
