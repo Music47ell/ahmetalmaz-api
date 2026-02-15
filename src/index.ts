@@ -79,7 +79,7 @@ app.get("/codestats/top-languages", async (c) =>
 	c.json(await getTopLanguages()),
 );
 
-app.use("/insight/*", bearerAuth({ token: process.env.INSIGHT_TOKEN }));
+// app.use("/insight/*", bearerAuth({ token: process.env.INSIGHT_TOKEN }));
 app.post("/correct-horse-battery-staple", (c) => handleAnalytics(c));
 app.get("/insight", async (c) => c.json(await getAnalytics()));
 app.get("/insight/:slug", async (c) => {
@@ -87,6 +87,21 @@ app.get("/insight/:slug", async (c) => {
 	const views = await getBlogViewsBySlug(slug);
 	return c.json({ views });
 });
+
+app.post("/insight/heartbeat", async (c) => {
+  const { visitorId } = await c.req.json();
+  if (!visitorId) return c.json({ error: "Missing visitorId" }, 400);
+
+  // store visitorId in Redis with 30s TTL
+  await redis.set(`online:${visitorId}`, "1", "EX", 30);
+
+  return c.json({ ok: true });
+});
+app.get("/insight/online", async (c) => {
+  const keys = await redis.keys("online:*");
+  return c.json({ total: keys.length });
+});
+
 
 app.get("/goodreads/stats", async (c) => c.json(await getGoodreadsStats()));
 app.get("/goodreads/books-read", async (c) => c.json(await getGoodreadsReadBooks()));
