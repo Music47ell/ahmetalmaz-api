@@ -54,6 +54,7 @@ Create a `.env` file in the project root:
 ```env
 USERNAME=<your codestats/listenbrainz/trakt username>
 TRAKT_CLIENT_ID=<your trakt api client id>
+TMDB_API_TOKEN=<your tmdb api bearer token>
 GOODREADS_READ_FEED=<your goodreads read shelf rss url>
 DATABASE_URL=<turso database url>
 DATABASE_AUTH_TOKEN=<turso auth token>
@@ -197,6 +198,7 @@ src/
 ├─ ogGenerator/
 │  └─ index.ts
 ├─ tmdb/
+│  └─ index.ts
 ├─ trakt/
 │  ├─ nowWatching.ts
 │  ├─ stats.ts
