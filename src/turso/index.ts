@@ -3,6 +3,7 @@ import { drizzle } from 'drizzle-orm/libsql'
 import { sql, eq } from 'drizzle-orm'
 import { integer, numeric, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 import { getFlagEmoji, decodeCfHeader, getCountryName } from '../utils/helpers'
+import { getBotFilterSQL } from '../utils/botFilter'
 
 const connection = () => {
 	return createClient({
@@ -79,7 +80,7 @@ const getBlogViewsBySlug = async (slug: string) => {
 const getAnalytics = async () => {
 	const db = drizzle(connection())
 	const countries = async () => {
-		const topTenCountriesStatement = sql`select flag, country, count(country) as total from analytics group by flag, country order by total desc limit 10`
+		const topTenCountriesStatement = sql`select flag, country, count(country) as total from analytics where ${getBotFilterSQL()} group by flag, country order by total desc limit 10`
 		const topTenCountriesRes = await db.all(topTenCountriesStatement)
 		const topTenCountries2 = (
 			topTenCountriesRes as {
@@ -95,7 +96,7 @@ const getAnalytics = async () => {
 		return topTenCountries2
 	}
 	const cities = async () => {
-		const topTenCitiesStatement = sql`select flag, city, count(city) as total from analytics group by flag, city order by total desc limit 10`
+		const topTenCitiesStatement = sql`select flag, city, count(city) as total from analytics where ${getBotFilterSQL()} group by flag, city order by total desc limit 10`
 		const topTenCitiesRes = await db.all(topTenCitiesStatement)
 		const topTenCities2 = (
 			topTenCitiesRes as {
@@ -111,7 +112,7 @@ const getAnalytics = async () => {
 		return topTenCities2
 	}
 	const referrers = async () => {
-		const topTenReferrersStatement = sql`select referrer, count(referrer) as total from analytics where referrer not like '%.ahmetalmaz.com%' and statusCode = 200 group by referrer order by count(referrer) desc limit 10`
+		const topTenReferrersStatement = sql`select referrer, count(referrer) as total from analytics where referrer not like '%.ahmetalmaz.com%' and statusCode = 200 and ${getBotFilterSQL()} group by referrer order by count(referrer) desc limit 10`
 		const topTenReferrersRes = await db.all(topTenReferrersStatement)
 		const topTenReferrers2 = (
 			topTenReferrersRes as { referrer: string | null; total: number }[]
@@ -122,7 +123,7 @@ const getAnalytics = async () => {
 		return topTenReferrers2
 	}
 	const slugs = async () => {
-		const topTenSlugsStatement = sql`select slug, title, count(slug) as total from analytics where title not like '%ahmetalmaz%' and statusCode = 200 group by slug order by total desc limit 10`
+		const topTenSlugsStatement = sql`select slug, title, count(slug) as total from analytics where title not like '%ahmetalmaz%' and statusCode = 200 and ${getBotFilterSQL()} group by slug order by total desc limit 10`
 		const topTenSlugsRes = await db.all(topTenSlugsStatement)
 		const topTenSlugs2 = (
 			topTenSlugsRes as {
@@ -139,7 +140,7 @@ const getAnalytics = async () => {
 	}
 
 	const browsers = async () => {
-		const topTenBrowsersStatement = sql`select browser, count(browser) as total from analytics group by browser order by total desc limit 10`
+		const topTenBrowsersStatement = sql`select browser, count(browser) as total from analytics where ${getBotFilterSQL()} group by browser order by total desc limit 10`
 		const topTenBrowsersRes = await db.all(topTenBrowsersStatement)
 		const topTenBrowsers2 = (
 			topTenBrowsersRes as {
@@ -154,7 +155,7 @@ const getAnalytics = async () => {
 	}
 
 	const operatingSystems = async () => {
-		const topTenOperatingSystemsStatement = sql`select os, count(os) as total from analytics group by os order by total desc limit 10`
+		const topTenOperatingSystemsStatement = sql`select os, count(os) as total from analytics where ${getBotFilterSQL()} group by os order by total desc limit 10`
 		const topTenOperatingSystemsRes = await db.all(topTenOperatingSystemsStatement)
 		const topTenOperatingSystems2 = (
 			topTenOperatingSystemsRes as {
@@ -168,7 +169,7 @@ const getAnalytics = async () => {
 		return topTenOperatingSystems2
 	}
 	const deviceTypes = async () => {
-		const topTenDevicesStatement = sql`select deviceType, count(deviceType) as total from analytics group by deviceType order by total desc limit 10`
+		const topTenDevicesStatement = sql`select deviceType, count(deviceType) as total from analytics where ${getBotFilterSQL()} group by deviceType order by total desc limit 10`
 		const topTenDevicesRes = await db.all(topTenDevicesStatement)
 		const topTenDevices2 = (
 			topTenDevicesRes as {
@@ -188,6 +189,7 @@ const getAnalytics = async () => {
 			from analytics
 			where eventType = 'pageview'
 			and timestamp > (strftime('%s','now','-30 days') * 1000)
+			and ${getBotFilterSQL()}
 		`
 		const pageViewsRes = (await db.all(pageViewsStatement)) as {
 			total: number
@@ -202,6 +204,7 @@ const getAnalytics = async () => {
 			from analytics
 			where eventType = 'pageview'
 			and timestamp > (strftime('%s','now','-30 days') * 1000)
+			and ${getBotFilterSQL()}
 		`
 		const visitsRes = (await db.all(visitsStatement)) as {
 			total: number
@@ -216,6 +219,7 @@ const getAnalytics = async () => {
 			from analytics
 			where eventType = 'pageview'
 			and timestamp > (strftime('%s','now','-30 days') * 1000)
+			and ${getBotFilterSQL()}
 		`
 		const visitorsRes = (await db.all(visitorsStatement)) as {
 			total: number
@@ -231,6 +235,7 @@ const getAnalytics = async () => {
 				from analytics
 				where eventType = 'pageview'
 				and timestamp > (strftime('%s','now','-30 days') * 1000)
+				and ${getBotFilterSQL()}
 				group by sessionId
 			)
 		`
@@ -249,11 +254,12 @@ const getAnalytics = async () => {
 					from analytics
 					where eventType = 'pageview'
 					and timestamp > (strftime('%s','now','-30 days') * 1000)
+					and ${getBotFilterSQL()}
 					group by sessionId
 					having count(*) = 1
 				)
 			) * 100.0 /
-			(select count(distinct sessionId) from analytics where eventType = 'pageview' and timestamp > (strftime('%s','now','-30 days') * 1000))
+			(select count(distinct sessionId) from analytics where eventType = 'pageview' and timestamp > (strftime('%s','now','-30 days') * 1000) and ${getBotFilterSQL()})
 			as total
 		`
 		const bounceRateRes = (await db.all(bounceRateStatement)) as {
@@ -270,6 +276,7 @@ const getAnalytics = async () => {
 				from analytics a
 				where eventType = 'pageview'
 				and timestamp > (strftime('%s','now','-30 days') * 1000)
+				and ${getBotFilterSQL()}
 				and timestamp = (
 					select min(timestamp)
 					from analytics
@@ -291,6 +298,7 @@ const getAnalytics = async () => {
 				from analytics a
 				where eventType = 'pageview'
 				and timestamp > (strftime('%s','now','-30 days') * 1000)
+				and ${getBotFilterSQL()}
 				and timestamp = (
 					select max(timestamp)
 					from analytics
@@ -310,6 +318,7 @@ const getAnalytics = async () => {
 		  SELECT language, COUNT(*) AS total
 		  FROM analytics
 		  WHERE timestamp > (strftime('%s','now','-30 days') * 1000)
+		  AND ${getBotFilterSQL()}
 		  GROUP BY language
 		  ORDER BY total DESC
 		`
