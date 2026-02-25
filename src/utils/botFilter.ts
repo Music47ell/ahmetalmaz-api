@@ -45,11 +45,10 @@ export const BOT_UA_PATTERNS = [
 ]
 
 /**
- * Known spam/bot referrer domain substrings (lowercased).
- * Patterns are matched as substrings, so 'semalt.com' will filter any
- * referrer URL that contains that string.  This is intentional for broad
- * coverage, but be aware that overly generic patterns could cause
- * false positives.
+ * Known spam/bot referrer domains (lowercased).
+ * Matching is done against the parsed hostname of the referrer URL, so
+ * 'semalt.com' matches 'semalt.com' and 'sub.semalt.com' but NOT
+ * 'notsemalt.com'.
  */
 export const BOT_REFERRER_PATTERNS = [
 	'semalt.com',
@@ -57,17 +56,38 @@ export const BOT_REFERRER_PATTERNS = [
 ]
 
 /**
+ * Returns `true` when the referrer URL's hostname equals `domain` or is a
+ * subdomain of `domain` (e.g. 'sub.semalt.com').
+ */
+const matchesReferrerDomain = (hostname: string, domain: string): boolean =>
+	hostname === domain || hostname.endsWith(`.${domain}`)
+
+/**
  * Returns `true` when the given user-agent or referrer string matches any
  * known bot pattern.  Call this at insert time so that bot classification
  * is stored in the `isBot` column, avoiding repeated full-table scans
  * at query time.
+ *
+ * Referrer matching uses parsed hostname comparison, so 'semalt.com' will
+ * not cause false positives for domains like 'notsemalt.com'.
  *
  * @param userAgent - The raw `User-Agent` header value (may be empty).
  * @param referrer  - The raw referrer URL (may be empty).
  */
 export const detectBot = (userAgent: string, referrer: string): boolean => {
 	const ua = userAgent.toLowerCase()
-	const ref = referrer.toLowerCase()
-	return BOT_UA_PATTERNS.some(p => ua.includes(p))
-		|| BOT_REFERRER_PATTERNS.some(p => ref.includes(p))
+	if (BOT_UA_PATTERNS.some(p => ua.includes(p))) return true
+
+	if (referrer) {
+		try {
+			const hostname = new URL(referrer).hostname.toLowerCase()
+			if (BOT_REFERRER_PATTERNS.some(d => matchesReferrerDomain(hostname, d))) return true
+		} catch {
+			// unparseable referrer — fall back to substring match
+			const ref = referrer.toLowerCase()
+			if (BOT_REFERRER_PATTERNS.some(d => ref.includes(d))) return true
+		}
+	}
+
+	return false
 }
