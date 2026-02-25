@@ -199,6 +199,7 @@ src/
 │  └─ index.ts
 ├─ tmdb/
 │  └─ index.ts
+│  └─ index.ts
 ├─ trakt/
 │  ├─ nowWatching.ts
 │  ├─ stats.ts
