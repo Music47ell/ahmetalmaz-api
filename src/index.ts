@@ -16,6 +16,8 @@ import { handleAnalytics, getAnalytics, getBlogViewsBySlug } from "../src/turso"
 import { generateOg } from "./ogGenerator/index.js";
 import { getGoodreadsStats } from "../src/goodreads/stats.js"
 import { getGoodreadsReadBooks } from "../src/goodreads/readBooks.js"
+import { getMonkeyTypeStats } from "../src/monkeytype/stats.js"
+import { getMonkeyTypeResults } from "../src/monkeytype/topResults.js"
 
 const app = new Hono();
 
@@ -118,6 +120,25 @@ app.get("/insight/:slug", async (c) => {
 
 app.get("/goodreads/stats", async (c) => c.json(await getGoodreadsStats()));
 app.get("/goodreads/books-read", async (c) => c.json(await getGoodreadsReadBooks()));
+
+app.get("/monkeytype/stats", async (c) => {
+  try {
+    const stats = await getMonkeyTypeStats()
+    return c.json(stats)
+  } catch (error) {
+    return c.json({ error: (error as Error).message }, 500)
+  }
+})
+app.get('/monkeytype/results', async (c) => {
+  try {
+    const limit = Math.min(parseInt(c.req.query('limit') || '10'), 100)
+    const results = await getMonkeyTypeResults(limit)
+    return c.json(results)
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    return c.json({ error: errorMessage }, 500)
+  }
+})
 
 export default {
 	port: 3000,
