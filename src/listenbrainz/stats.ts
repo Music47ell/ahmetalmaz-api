@@ -1,4 +1,7 @@
-export const getListenBrainzStats = async () => {
+import { withCache } from "../utils/cache.js";
+
+export const getListenBrainzStats = async () =>
+  withCache("listenbrainz:stats", 3600, async () => {
   const endpoints = {
     listenActivity: `https://api.listenbrainz.org/1/stats/user/${process.env.USERNAME}/listening-activity`,
     listenCount: `https://api.listenbrainz.org/1/user/${process.env.USERNAME}/listen-count`,
@@ -30,4 +33,4 @@ export const getListenBrainzStats = async () => {
     albumsCount: albumJson.payload.total_release_count,
     tracksCount: trackJson.payload.total_recording_count,
   }
-}
+})

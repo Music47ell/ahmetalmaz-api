@@ -1,5 +1,6 @@
 import { get_level, get_level_progress } from "../utils/helpers"
 import { Languages } from "../types"
+import { withCache } from "../utils/cache.js"
 
 const GITHUB_COLORS_URL =
 	'https://raw.githubusercontent.com/ozh/github-colors/master/colors.json'
@@ -15,7 +16,8 @@ async function getLanguageColors(): Promise<Record<string, { color: string }>> {
 	return data
 }
 
-export const getTopLanguages = async () => {
+export const getTopLanguages = async () =>
+	withCache("codestats:top-languages", 3600, async () => {
 	const response = await fetch(`https://codestats.net/api/users/${process.env.USERNAME}`)
 	const data = (await response.json()) as Languages
 
@@ -69,4 +71,4 @@ export const getTopLanguages = async () => {
 	}
 
 	return languages.sort((a, b) => b.xps - a.xps).slice(0, 10)
-}
+})

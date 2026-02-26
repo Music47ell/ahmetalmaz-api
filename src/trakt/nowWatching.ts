@@ -1,4 +1,7 @@
-export const getNowWatching = async () => {
+import { withCache } from '../utils/cache.js'
+
+export const getNowWatching = async () =>
+  withCache("trakt:now-watching", 30, async () => {
   const endpoint = `https://api.trakt.tv/users/${process.env.USERNAME}/watching`
   const res = await fetch(endpoint, {
     headers: {
@@ -17,4 +20,4 @@ export const getNowWatching = async () => {
   } catch {
     return { status: res.status }
   }
-}
+})

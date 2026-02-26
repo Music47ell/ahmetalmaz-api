@@ -1,6 +1,8 @@
 import { XMLParser } from "fast-xml-parser";
+import { withCache } from "../utils/cache.js";
 
-export const getGoodreadsReadBooks = async () => {
+export const getGoodreadsReadBooks = async () =>
+  withCache("goodreads:read-books", 3600, async () => {
   if (!process.env.GOODREADS_READ_FEED) {
     throw new Error("GOODREADS_READ_FEED environment variable is not set");
   }
@@ -37,4 +39,4 @@ export const getGoodreadsReadBooks = async () => {
   });
 
   return last10;
-};
+});

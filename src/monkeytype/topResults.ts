@@ -1,3 +1,5 @@
+import { withCache } from '../utils/cache.js'
+
 export interface TestResult {
   wpm: number
   accuracy: number
@@ -6,7 +8,8 @@ export interface TestResult {
   timestamp: number
 }
 
-export const getMonkeyTypeResults = async (limit: number = 10): Promise<TestResult[]> => {
+export const getMonkeyTypeResults = async (limit: number = 10): Promise<TestResult[]> =>
+  withCache(`monkeytype:results:${limit}`, 1800, async () => {
   const apiKey = process.env.MONKEYTYPE_API_KEY
   
   if (!apiKey) {
@@ -45,4 +48,4 @@ export const getMonkeyTypeResults = async (limit: number = 10): Promise<TestResu
     console.error('Error fetching MonkeyType results:', error)
     throw error
   }
-}
+})

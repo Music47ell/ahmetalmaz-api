@@ -1,6 +1,8 @@
 import { logError } from '../utils/helpers.js'
+import { withCache } from '../utils/cache.js'
 
-export const getNowPlaying = async () => {
+export const getNowPlaying = async () =>
+  withCache("listenbrainz:now-playing", 30, async () => {
   const endpoint = `https://api.listenbrainz.org/1/user/${process.env.USERNAME}/playing-now`
 
   try {
@@ -58,4 +60,4 @@ export const getNowPlaying = async () => {
     logError('Error fetching now playing track:', err)
     return { isPlaying: false }
   }
-}
+})

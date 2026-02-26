@@ -1,3 +1,5 @@
+import { withCache } from '../utils/cache.js'
+
 export interface MonkeyTypeStats {
   bestRecord: {
     wpm: number
@@ -12,7 +14,8 @@ export interface MonkeyTypeStats {
   accountAge: number // in milliseconds
 }
 
-export const getMonkeyTypeStats = async (): Promise<MonkeyTypeStats> => {
+export const getMonkeyTypeStats = async (): Promise<MonkeyTypeStats> =>
+  withCache("monkeytype:stats", 3600, async () => {
   const apiKey = process.env.MONKEYTYPE_API_KEY
   const username = process.env.MONKEYTYPE_USERNAME
   
@@ -128,4 +131,4 @@ export const getMonkeyTypeStats = async (): Promise<MonkeyTypeStats> => {
     console.error('Error fetching MonkeyType stats:', error)
     throw error
   }
-}
+})

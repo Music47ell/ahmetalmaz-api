@@ -1,10 +1,12 @@
 import { logError } from '../utils/helpers.js'
 import type { TrackInfo } from '../types.js'
+import { withCache } from '../utils/cache.js'
 
 const PLACEHOLDER_IMAGE =
   'https://cdn-images.dzcdn.net/images/cover//250x250-000000-80-0-0.jpg'
 
-export const getRecentTracks = async (): Promise<TrackInfo[]> => {
+export const getRecentTracks = async (): Promise<TrackInfo[]> =>
+  withCache("listenbrainz:recent-tracks", 300, async () => {
   try {
     const res = await fetch(
       `https://api.listenbrainz.org/1/user/${process.env.USERNAME}/listens?count=10`
@@ -100,4 +102,4 @@ export const getRecentTracks = async (): Promise<TrackInfo[]> => {
     logError('Error fetching recent tracks', err)
     return []
   }
-}
+})

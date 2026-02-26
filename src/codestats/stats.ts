@@ -1,6 +1,8 @@
 import { CodeStats } from '../types.js'
+import { withCache } from '../utils/cache.js'
 
-export const getCodeStatsStats = async () => {
+export const getCodeStatsStats = async () =>
+  withCache("codestats:stats", 3600, async () => {
 	const response = await fetch(`https://codestats.net/api/users/${process.env.USERNAME}`)
 
 	const data = (await response.json()) as CodeStats
@@ -18,4 +20,4 @@ export const getCodeStatsStats = async () => {
 	}
 
 	return stats
-}
+})

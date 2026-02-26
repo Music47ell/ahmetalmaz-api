@@ -1,4 +1,5 @@
 import { getTMDBData } from '../tmdb/index.js'
+import { withCache } from '../utils/cache.js'
 
 export interface Movie {
   title: string
@@ -24,7 +25,8 @@ type TraktRatingItem = {
   }
 }
 
-export const getWatchedMovies = async (): Promise<Movie[]> => {
+export const getWatchedMovies = async (): Promise<Movie[]> =>
+  withCache("trakt:watched-movies", 1800, async () => {
   const headers = {
     'Content-Type': 'application/json',
     'trakt-api-version': '2',
@@ -77,4 +79,4 @@ export const getWatchedMovies = async (): Promise<Movie[]> => {
   ).filter(Boolean) as Movie[]
 
   return movies
-}
+})
