@@ -6,8 +6,10 @@ export const redis =
         maxRetriesPerRequest: 5,
       })
     : {
+        get: async () => null,
         set: async () => {},
         keys: async () => [],
+        pipeline: () => ({ exec: async () => [] }),
       };
 
 // catch unhandled Redis errors

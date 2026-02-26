@@ -1,4 +1,7 @@
-export const getTraktStats = async () => {
+import { withCache } from '../utils/cache.js'
+
+export const getTraktStats = async () =>
+  withCache("trakt:stats", 3600, async () => {
   const endpoint = `https://api.trakt.tv/users/${process.env.USERNAME}/stats`
   const res = await fetch(endpoint, {
     headers: {
@@ -16,4 +19,4 @@ export const getTraktStats = async () => {
     people: number
     networks: number
   }
-}
+})
