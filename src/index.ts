@@ -18,6 +18,8 @@ import { getGoodreadsStats } from "../src/goodreads/stats.js"
 import { getGoodreadsReadBooks } from "../src/goodreads/readBooks.js"
 import { getMonkeyTypeStats } from "../src/monkeytype/stats.js"
 import { getMonkeyTypeResults } from "../src/monkeytype/topResults.js"
+import { getRandomQuote } from "../src/quotes/index.js"
+import { getRandomLyric } from "../src/lyrics/index.js"
 
 const app = new Hono();
 
@@ -139,6 +141,22 @@ app.get('/monkeytype/results', async (c) => {
     return c.json({ error: errorMessage }, 500)
   }
 })
+
+app.get("/quotes/random", (c) => {
+	try {
+		return c.json(getRandomQuote());
+	} catch (error) {
+		return c.json({ error: (error as Error).message }, 500);
+	}
+});
+
+app.get("/lyrics/random", (c) => {
+	try {
+		return c.json(getRandomLyric());
+	} catch (error) {
+		return c.json({ error: (error as Error).message }, 500);
+	}
+});
 
 export default {
 	port: 3000,
