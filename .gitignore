@@ -31,3 +31,7 @@ lerna-debug.log*
 
 # misc
 .DS_Store
+
+app.db
+app.db-shm
+app.db-wal

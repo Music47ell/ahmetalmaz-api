@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { bearerAuth } from "hono/bearer-auth";
 import { cors } from "hono/cors";
-import { redis } from "../src/utils/redisClient.js";
+import { upsertOnlineVisitor, getOnlineVisitors } from "../src/utils/onlineVisitors.js";
 import { getCodeStatsStats } from "../src/codestats/stats.js";
 import { getTopLanguages } from "../src/codestats/topLanguages.js";
 import { getFullMessage } from "../src/curl-card/index.js";
@@ -90,27 +90,12 @@ app.post("/heartbeat", async (c) => {
   const { visitorId, slug } = await c.req.json();
   if (!visitorId) return c.json({ error: "Missing visitorId" }, 400);
 
-  // store visitorId + slug with 30s TTL
-  await redis.set(`online:${visitorId}`, slug || "/", "EX", 30);
+  upsertOnlineVisitor(visitorId, slug || "/");
 
   return c.json({ ok: true });
 });
-app.get("/online", async (c) => {
-  const keys = await redis.keys("online:*");
-  const pipeline = redis.pipeline();
-
-  keys.forEach((key) => pipeline.get(key));
-  const pages = await pipeline.exec();
-
-  // pages is [[null, slug], ...] so map to slugs only
-  const onlinePages: Record<string, number> = {};
-
-  pages.forEach(([, slug]) => {
-    const s = slug || "/";
-    onlinePages[s] = (onlinePages[s] || 0) + 1;
-  });
-
-  return c.json({ total: keys.length, pages: onlinePages });
+app.get("/online", (c) => {
+  return c.json(getOnlineVisitors());
 });
 
 app.get("/insight", async (c) => c.json(await getAnalytics()));

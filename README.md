@@ -56,9 +56,7 @@ USERNAME=<your codestats/listenbrainz/trakt username>
 TRAKT_CLIENT_ID=<your trakt api client id>
 TMDB_API_TOKEN=<your tmdb api bearer token>
 GOODREADS_READ_FEED=<your goodreads read shelf rss url>
-DATABASE_URL=<turso database url>
-DATABASE_AUTH_TOKEN=<turso auth token>
-REDIS_URL=<redis connection url>
+DATABASE_PATH=/data/app.db
 ALLOWED_ORIGINS=<comma-separated list of allowed cors origins>
 ```
 

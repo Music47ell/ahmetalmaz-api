@@ -8,3 +8,6 @@ README.md
 tests
 coverage
 .env
+app.db
+app.db-shm
+app.db-wal
