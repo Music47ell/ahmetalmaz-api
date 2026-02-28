@@ -1,4 +1,5 @@
 import { db } from '../db.js'
+import { logError } from './helpers.js'
 
 const pruneCache = db.query('DELETE FROM cache WHERE expires_at < ?')
 
@@ -27,8 +28,8 @@ export const withCache = async <T>(
 			.query('INSERT OR REPLACE INTO cache (key, value, expires_at) VALUES (?, ?, ?)')
 			.run(key, JSON.stringify(data), now + ttl)
 		pruneCache.run(now)
-	} catch {
-		// ignore cache write errors
+	} catch (err) {
+		logError(`withCache: failed to write key "${key}"`, err)
 	}
 
 	return data
