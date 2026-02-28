@@ -68,8 +68,8 @@ export async function getBlogList(): Promise<PostMeta[]> {
 				}
 			}
 			return posts.sort((a, b) => {
-				const da = new Date(a.frontmatter.date as string).getTime()
-				const db_ = new Date(b.frontmatter.date as string).getTime()
+				const da = new Date(a.frontmatter.published as string).getTime()
+				const db_ = new Date(b.frontmatter.published as string).getTime()
 				return db_ - da
 			})
 		} catch (err) {
