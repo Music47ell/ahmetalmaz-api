@@ -20,6 +20,7 @@ import { getMonkeyTypeStats } from "../src/monkeytype/stats.js"
 import { getMonkeyTypeResults } from "../src/monkeytype/topResults.js"
 import { getRandomQuote } from "../src/quotes/index.js"
 import { getRandomLyric } from "../src/lyrics/index.js"
+import { getBlogList, getBlogPost, getBlogAsset } from "../src/blog/index.js"
 
 const app = new Hono();
 
@@ -142,6 +143,30 @@ app.get("/lyrics/random", (c) => {
 		return c.json({ error: (error as Error).message }, 500);
 	}
 });
+
+app.get('/blog', async (c) => {
+	try {
+		const posts = await getBlogList()
+		return c.json(posts)
+	} catch (error) {
+		return c.json({ error: (error as Error).message }, 500)
+	}
+})
+
+app.get('/blog/:slug/assets/:file', async (c) => {
+	const { slug, file } = c.req.param()
+	const asset = await getBlogAsset(slug, file)
+	if (!asset) return c.json({ error: 'Not found' }, 404)
+	c.header('Content-Type', asset.type)
+	return c.body(await asset.arrayBuffer())
+})
+
+app.get('/blog/:slug', async (c) => {
+	const { slug } = c.req.param()
+	const post = await getBlogPost(slug)
+	if (!post) return c.json({ error: 'Post not found' }, 404)
+	return c.json(post)
+})
 
 export default {
 	port: 3000,

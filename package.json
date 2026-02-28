@@ -9,6 +9,7 @@
   "dependencies": {
     "canvas": "^3.2.1",
     "fast-xml-parser": "^5.4.1",
+    "gray-matter": "^4.0.3",
     "hono": "^4.12.3",
     "kleur": "^4.1.5",
     "string-width": "^8.2.0"

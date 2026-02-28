@@ -32,6 +32,9 @@ lerna-debug.log*
 # misc
 .DS_Store
 
+# blog content (added via FTP, not committed to git)
+content/
+
 app.db
 app.db-shm
 app.db-wal
