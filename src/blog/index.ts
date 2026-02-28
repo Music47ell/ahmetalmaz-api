@@ -67,7 +67,11 @@ export async function getBlogList(): Promise<PostMeta[]> {
 					logError(`Failed to parse frontmatter for slug "${slug}"`, err)
 				}
 			}
-			return posts
+			return posts.sort((a, b) => {
+				const da = new Date(a.frontmatter.date as string).getTime()
+				const db_ = new Date(b.frontmatter.date as string).getTime()
+				return db_ - da
+			})
 		} catch (err) {
 			logError('Failed to read content directory', err)
 			return []
