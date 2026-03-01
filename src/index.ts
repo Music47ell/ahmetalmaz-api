@@ -1,148 +1,166 @@
-import { Hono } from "hono";
-import { bearerAuth } from "hono/bearer-auth";
-import { cors } from "hono/cors";
-import { upsertOnlineVisitor, getOnlineVisitors } from "../src/utils/onlineVisitors.js";
-import { getCodeStatsStats } from "../src/codestats/stats.js";
-import { getTopLanguages } from "../src/codestats/topLanguages.js";
-import { getFullMessage } from "../src/curl-card/index.js";
-import { getNowPlaying } from "../src/listenbrainz/nowPlaying.js";
-import { getRecentTracks } from "../src/listenbrainz/recentTracks.js";
-import { getListenBrainzStats } from "../src/listenbrainz/stats.js";
-import { getNowWatching } from "../src/trakt/nowWatching.js";
-import { getTraktStats } from "../src/trakt/stats.js";
-import { getWatchedMovies } from "../src/trakt/watchedMovies.js";
-import { getWatchedShows } from "../src/trakt/watchedShows.js";
-import { handleAnalytics, getAnalytics, getBlogViewsBySlug } from "../src/turso";
-import { generateOg } from "./ogGenerator/index.js";
-import { getGoodreadsStats } from "../src/goodreads/stats.js"
-import { getGoodreadsReadBooks } from "../src/goodreads/readBooks.js"
-import { getMonkeyTypeStats } from "../src/monkeytype/stats.js"
-import { getMonkeyTypeResults } from "../src/monkeytype/topResults.js"
-import { getRandomQuote } from "../src/quotes/index.js"
-import { getRandomLyric } from "../src/lyrics/index.js"
-import { getBlogList, getBlogPost, getBlogAsset } from "../src/blog/index.js"
+import { Hono } from 'hono'
+import { bearerAuth } from 'hono/bearer-auth'
+import { cors } from 'hono/cors'
+import { getBlogAsset, getBlogList, getBlogPost } from '../src/blog/index.js'
+import { getCodeStatsStats } from '../src/codestats/stats.js'
+import { getTopLanguages } from '../src/codestats/topLanguages.js'
+import { getFullMessage } from '../src/curl-card/index.js'
+import { getGoodreadsReadBooks } from '../src/goodreads/readBooks.js'
+import { getGoodreadsStats } from '../src/goodreads/stats.js'
+import { getNowPlaying } from '../src/listenbrainz/nowPlaying.js'
+import { getRecentTracks } from '../src/listenbrainz/recentTracks.js'
+import { getListenBrainzStats } from '../src/listenbrainz/stats.js'
+import { getRandomLyric } from '../src/lyrics/index.js'
+import { getMonkeyTypeStats } from '../src/monkeytype/stats.js'
+import { getMonkeyTypeResults } from '../src/monkeytype/topResults.js'
+import { getRandomQuote } from '../src/quotes/index.js'
+import { getNowWatching } from '../src/trakt/nowWatching.js'
+import { getTraktStats } from '../src/trakt/stats.js'
+import { getWatchedMovies } from '../src/trakt/watchedMovies.js'
+import { getWatchedShows } from '../src/trakt/watchedShows.js'
+import { getAnalytics, getBlogViewsBySlug, handleAnalytics } from '../src/turso'
+import {
+	getOnlineVisitors,
+	upsertOnlineVisitor,
+} from '../src/utils/onlineVisitors.js'
+import { generateOg } from './ogGenerator/index.js'
 
-const app = new Hono();
+const app = new Hono()
 
-const allowedOrigins = (process.env.ALLOWED_ORIGINS || "").split(",");
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || '').split(',')
 
 app.use(
-	"*",
+	'*',
 	cors({
 		origin: (origin) => {
 			return origin && allowedOrigins.includes(origin)
 				? origin
-				: allowedOrigins[0];
+				: allowedOrigins[0]
 		},
-		allowMethods: ["GET", "POST", "OPTIONS"],
-		allowHeaders: ["Content-Type", "Authorization", "continent", "country", "region", "region-code", "city", "latitude", "longitude", "timezone", "statusCode"],
+		allowMethods: ['GET', 'POST', 'OPTIONS'],
+		allowHeaders: [
+			'Content-Type',
+			'Authorization',
+			'continent',
+			'country',
+			'region',
+			'region-code',
+			'city',
+			'latitude',
+			'longitude',
+			'timezone',
+			'statusCode',
+		],
 	}),
-);
+)
 
-app.get("/", async (c) => c.text(getFullMessage()));
+app.get('/', async (c) => c.text(getFullMessage()))
 
-app.get("/og", async (c) => {
-	const rawUrl = c.req.raw.url.includes("&amp;")
-		? c.req.raw.url.replace(/&amp;/g, "&")
-		: c.req.raw.url;
+app.get('/og', async (c) => {
+	const rawUrl = c.req.raw.url.includes('&amp;')
+		? c.req.raw.url.replace(/&amp;/g, '&')
+		: c.req.raw.url
 
-	const params = new URLSearchParams(rawUrl.split("?")[1] ?? "");
+	const params = new URLSearchParams(rawUrl.split('?')[1] ?? '')
 
-	const title = params.get("title") ?? "Default Title";
-	const description = params.get("description") ?? "Default Description";
-	const pubdate = params.get("pubdate") ?? "2025-12-31";
+	const title = params.get('title') ?? 'Default Title'
+	const description = params.get('description') ?? 'Default Description'
+	const pubdate = params.get('pubdate') ?? '2025-12-31'
 
 	try {
-		const domain = "ahmetalmaz.com";
+		const domain = 'ahmetalmaz.com'
 
-		const image = await generateOg(title, description, pubdate, domain);
+		const image = await generateOg(title, description, pubdate, domain)
 
-		c.header("Content-Type", "image/png");
-		return c.body(image);
+		c.header('Content-Type', 'image/png')
+		return c.body(image)
 	} catch (error) {
-		console.error(error);
-		return c.json({ error: error.message || "Failed to generate image" }, 500);
+		console.error(error)
+		return c.json({ error: error.message || 'Failed to generate image' }, 500)
 	}
-});
+})
 
-app.get("/listenbrainz/stats", async (c) =>
+app.get('/listenbrainz/stats', async (c) =>
 	c.json(await getListenBrainzStats()),
-);
-app.get("/listenbrainz/now-playing", async (c) =>
-	c.json(await getNowPlaying()),
-);
-app.get("/listenbrainz/recent-tracks", async (c) =>
+)
+app.get('/listenbrainz/now-playing', async (c) => c.json(await getNowPlaying()))
+app.get('/listenbrainz/recent-tracks', async (c) =>
 	c.json(await getRecentTracks()),
-);
+)
 
-app.get("/trakt/stats", async (c) => c.json(await getTraktStats()));
-app.get("/trakt/now-watching", async (c) => c.json(await getNowWatching()));
-app.get("/trakt/watched-movies", async (c) => c.json(await getWatchedMovies()));
-app.get("/trakt/watched-shows", async (c) => c.json(await getWatchedShows()));
+app.get('/trakt/stats', async (c) => c.json(await getTraktStats()))
+app.get('/trakt/now-watching', async (c) => c.json(await getNowWatching()))
+app.get('/trakt/watched-movies', async (c) => c.json(await getWatchedMovies()))
+app.get('/trakt/watched-shows', async (c) => c.json(await getWatchedShows()))
 
-app.get("/codestats/stats", async (c) => c.json(await getCodeStatsStats()));
-app.get("/codestats/top-languages", async (c) =>
+app.get('/codestats/stats', async (c) => c.json(await getCodeStatsStats()))
+app.get('/codestats/top-languages', async (c) =>
 	c.json(await getTopLanguages()),
-);
+)
 
-// app.use("/insight/*", bearerAuth({ token: process.env.INSIGHT_TOKEN }));
-app.post("/correct-horse-battery-staple", (c) => handleAnalytics(c));
-app.post("/heartbeat", async (c) => {
-  const { visitorId, slug } = await c.req.json();
-  if (!visitorId) return c.json({ error: "Missing visitorId" }, 400);
+app.post('/correct-horse-battery-staple', (c) => handleAnalytics(c))
+app.post('/heartbeat', async (c) => {
+	const { visitorId, slug } = await c.req.json()
+	if (!visitorId) return c.json({ error: 'Missing visitorId' }, 400)
 
-  upsertOnlineVisitor(visitorId, slug || "/");
+	upsertOnlineVisitor(visitorId, slug || '/')
 
-  return c.json({ ok: true });
-});
-app.get("/online", (c) => {
-  return c.json(getOnlineVisitors());
-});
+	return c.json({ ok: true })
+})
+app.get('/online', (c) => {
+	return c.json(getOnlineVisitors())
+})
 
-app.get("/insight", async (c) => c.json(await getAnalytics()));
-app.get("/insight/:slug", async (c) => {
-	const { slug } = c.req.param();
-	const views = await getBlogViewsBySlug(slug);
-	return c.json({ views });
-});
+app.get('/insight', async (c) => c.json(await getAnalytics()))
+app.get('/insight/:slug', async (c) => {
+	const { slug } = c.req.param()
+	const views = await getBlogViewsBySlug(slug)
+	return c.json({ views })
+})
 
-app.get("/goodreads/stats", async (c) => c.json(await getGoodreadsStats()));
-app.get("/goodreads/books-read", async (c) => c.json(await getGoodreadsReadBooks()));
+app.get('/goodreads/stats', async (c) => c.json(await getGoodreadsStats()))
+app.get('/goodreads/books-read', async (c) =>
+	c.json(await getGoodreadsReadBooks()),
+)
 
-app.get("/monkeytype/stats", async (c) => {
-  try {
-    const stats = await getMonkeyTypeStats()
-    return c.json(stats)
-  } catch (error) {
-    return c.json({ error: (error as Error).message }, 500)
-  }
+app.get('/monkeytype/stats', async (c) => {
+	try {
+		const stats = await getMonkeyTypeStats()
+		return c.json(stats)
+	} catch (error) {
+		return c.json({ error: (error as Error).message }, 500)
+	}
 })
 app.get('/monkeytype/results', async (c) => {
-  try {
-    const limit = Math.min(parseInt(c.req.query('limit') || '10'), 100)
-    const results = await getMonkeyTypeResults(limit)
-    return c.json(results)
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-    return c.json({ error: errorMessage }, 500)
-  }
+	try {
+		const limit = Math.min(parseInt(c.req.query('limit') || '10'), 100)
+		const results = await getMonkeyTypeResults(limit)
+		return c.json(results)
+	} catch (error) {
+		const errorMessage =
+			error instanceof Error ? error.message : 'Unknown error'
+		return c.json({ error: errorMessage }, 500)
+	}
 })
 
-app.get("/quotes/random", (c) => {
+app.get('/quotes/random', (c) => {
 	try {
-		return c.json(getRandomQuote());
+		return c.json(getRandomQuote())
 	} catch (error) {
-		return c.json({ error: (error as Error).message }, 500);
+		return c.json({ error: (error as Error).message }, 500)
 	}
-});
+})
 
-app.get("/lyrics/random", (c) => {
+app.get('/lyrics/random', (c) => {
 	try {
-		return c.json(getRandomLyric());
+		return c.json(getRandomLyric())
 	} catch (error) {
-		return c.json({ error: (error as Error).message }, 500);
+		return c.json({ error: (error as Error).message }, 500)
 	}
-});
+})
+
+app.use('/blog', bearerAuth({ token: process.env.BLOG_TOKEN ?? '' }))
+app.use('/blog/:slug', bearerAuth({ token: process.env.BLOG_TOKEN ?? '' }))
 
 app.get('/blog', async (c) => {
 	try {
@@ -170,6 +188,6 @@ app.get('/blog/:slug', async (c) => {
 
 export default {
 	port: 3000,
-	hostname: "0.0.0.0", // required for Docker
+	hostname: '0.0.0.0', // required for Docker
 	fetch: app.fetch,
-};
+}

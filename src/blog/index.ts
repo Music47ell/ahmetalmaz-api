@@ -37,6 +37,7 @@ export async function getBlogList(): Promise<PostMeta[]> {
 				try {
 					const raw = await Bun.file(filePath).text()
 					const { data: frontmatter } = matter(raw)
+					if (frontmatter.draft !== false) continue
 					posts.push({ slug, frontmatter })
 				} catch (err) {
 					logError(`Failed to parse frontmatter for slug "${slug}"`, err)
@@ -55,7 +56,8 @@ export async function getBlogList(): Promise<PostMeta[]> {
 }
 
 export async function getBlogPost(slug: string): Promise<Post | null> {
-	if (!slug || slug.includes('/') || slug.includes('\\') || slug.includes('..')) return null
+	if (!slug || slug.includes('/') || slug.includes('\\') || slug.includes('..'))
+		return null
 	const slugDir = join(CONTENT_DIR, slug)
 	return withCache<Post | null>(`blog:${slug}`, CACHE_TTL, async () => {
 		const filePath = await findIndexFile(slugDir)
@@ -63,6 +65,7 @@ export async function getBlogPost(slug: string): Promise<Post | null> {
 		try {
 			const raw = await Bun.file(filePath).text()
 			const { data: frontmatter, content } = matter(raw)
+			if (frontmatter.draft !== false) return null
 			return { slug, frontmatter, content }
 		} catch (err) {
 			logError(`Failed to read post "${slug}"`, err)
@@ -71,7 +74,10 @@ export async function getBlogPost(slug: string): Promise<Post | null> {
 	})
 }
 
-export async function getBlogAsset(slug: string, filename: string): Promise<BunFile | null> {
+export async function getBlogAsset(
+	slug: string,
+	filename: string,
+): Promise<BunFile | null> {
 	const assetPath = join(CONTENT_DIR, slug, 'assets', filename)
 	if (!assetPath.startsWith(CONTENT_DIR + '/')) return null
 	const file = Bun.file(assetPath)
