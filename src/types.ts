@@ -1,12 +1,12 @@
 export interface TrackInfo {
-  artist: string
-  title: string
-  mbid: string | null
-  release_mbid: string | null
-  image: string
-  preview: string | null
-  caa_id?: number | null
-  caa_release_mbid?: string | null
+	artist: string
+	title: string
+	mbid: string | null
+	release_mbid: string | null
+	image: string
+	preview: string | null
+	caa_id?: number | null
+	caa_release_mbid?: string | null
 }
 
 export type CodeStats = {

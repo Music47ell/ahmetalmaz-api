@@ -50,10 +50,7 @@ export const BOT_UA_PATTERNS = [
  * 'semalt.com' matches 'semalt.com' and 'sub.semalt.com' but NOT
  * 'notsemalt.com'.
  */
-export const BOT_REFERRER_PATTERNS = [
-	'semalt.com',
-	'buttons-for-website.com',
-]
+export const BOT_REFERRER_PATTERNS = ['semalt.com', 'buttons-for-website.com']
 
 /**
  * Returns `true` when the referrer URL's hostname equals `domain` or is a
@@ -76,16 +73,17 @@ const matchesReferrerDomain = (hostname: string, domain: string): boolean =>
  */
 export const detectBot = (userAgent: string, referrer: string): boolean => {
 	const ua = userAgent.toLowerCase()
-	if (BOT_UA_PATTERNS.some(p => ua.includes(p))) return true
+	if (BOT_UA_PATTERNS.some((p) => ua.includes(p))) return true
 
 	if (referrer) {
 		try {
 			const hostname = new URL(referrer).hostname.toLowerCase()
-			if (BOT_REFERRER_PATTERNS.some(d => matchesReferrerDomain(hostname, d))) return true
+			if (BOT_REFERRER_PATTERNS.some((d) => matchesReferrerDomain(hostname, d)))
+				return true
 		} catch {
 			// unparseable referrer — fall back to substring match
 			const ref = referrer.toLowerCase()
-			if (BOT_REFERRER_PATTERNS.some(d => ref.includes(d))) return true
+			if (BOT_REFERRER_PATTERNS.some((d) => ref.includes(d))) return true
 		}
 	}
 

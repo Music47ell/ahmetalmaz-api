@@ -24,9 +24,9 @@ export const withCache = async <T>(
 	const data = await fn()
 
 	try {
-		db
-			.query('INSERT OR REPLACE INTO cache (key, value, expires_at) VALUES (?, ?, ?)')
-			.run(key, JSON.stringify(data), now + ttl)
+		db.query(
+			'INSERT OR REPLACE INTO cache (key, value, expires_at) VALUES (?, ?, ?)',
+		).run(key, JSON.stringify(data), now + ttl)
 		pruneCache.run(now)
 	} catch (err) {
 		logError(`withCache: failed to write key "${key}"`, err)
