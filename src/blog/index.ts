@@ -6,6 +6,16 @@ import { logError } from '../utils/helpers.js'
 
 const CONTENT_DIR = process.env.CONTENT_PATH ?? join(process.cwd(), 'content')
 const CACHE_TTL = 86400 // 24 hours
+const WORDS_PER_MINUTE = 200
+
+function getReadingStats(content: string): {
+	wordCount: number
+	readingTime: number
+} {
+	const wordCount = content.trim().split(/\s+/).filter(Boolean).length
+	const readingTime = Math.max(1, Math.ceil(wordCount / WORDS_PER_MINUTE))
+	return { wordCount, readingTime }
+}
 
 async function findIndexFile(slugDir: string): Promise<string | null> {
 	for (const ext of ['md', 'mdx']) {
@@ -36,9 +46,12 @@ export async function getBlogList(): Promise<PostMeta[]> {
 				if (!filePath) continue
 				try {
 					const raw = await Bun.file(filePath).text()
-					const { data: frontmatter } = matter(raw)
+					const { data: frontmatter, content } = matter(raw)
 					if (frontmatter.draft !== false) continue
-					posts.push({ slug, frontmatter })
+					posts.push({
+						slug,
+						frontmatter: { ...frontmatter, ...getReadingStats(content) },
+					})
 				} catch (err) {
 					logError(`Failed to parse frontmatter for slug "${slug}"`, err)
 				}
@@ -66,7 +79,11 @@ export async function getBlogPost(slug: string): Promise<Post | null> {
 			const raw = await Bun.file(filePath).text()
 			const { data: frontmatter, content } = matter(raw)
 			if (frontmatter.draft !== false) return null
-			return { slug, frontmatter, content }
+			return {
+				slug,
+				frontmatter: { ...frontmatter, ...getReadingStats(content) },
+				content,
+			}
 		} catch (err) {
 			logError(`Failed to read post "${slug}"`, err)
 			return null
