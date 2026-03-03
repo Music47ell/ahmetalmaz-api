@@ -1,11 +1,11 @@
-import { unified } from 'unified'
+import { pluginLineNumbers } from '@expressive-code/plugin-line-numbers'
+import rehypeExpressiveCode from 'rehype-expressive-code'
+import rehypeSlug from 'rehype-slug'
+import rehypeStringify from 'rehype-stringify'
 import remarkParse from 'remark-parse'
 import remarkRehype from 'remark-rehype'
-import rehypeStringify from 'rehype-stringify'
-import rehypeSlug from 'rehype-slug'
+import { unified } from 'unified'
 import { visit } from 'unist-util-visit'
-import rehypeExpressiveCode from 'rehype-expressive-code'
-import { pluginLineNumbers } from '@expressive-code/plugin-line-numbers'
 
 const ecConfig = {
 	theme: 'dracula',
@@ -82,10 +82,18 @@ export async function processMarkdown(markdown: string): Promise<string> {
 
 				node.properties ??= {}
 				const existing = node.properties.className ?? []
-				node.properties.className = [...existing, ...elementClasses[tag].split(' ')]
+				node.properties.className = [
+					...existing,
+					...elementClasses[tag].split(' '),
+				]
 
 				if (/^h[1-6]$/.test(tag)) {
-					node.properties.className.push('inline-flex', 'items-center', 'gap-x-2', 'group')
+					node.properties.className.push(
+						'inline-flex',
+						'items-center',
+						'gap-x-2',
+						'group',
+					)
 				}
 			})
 		})

@@ -175,8 +175,8 @@ app.get('/blog/:slug/assets/:file', async (c) => {
 	const { slug, file } = c.req.param()
 	const asset = await getBlogAsset(slug, file)
 	if (!asset) return c.json({ error: 'Not found' }, 404)
-	c.header('Content-Type', asset.type)
-	return c.body(await asset.arrayBuffer())
+	c.header('Content-Type', asset.contentType)
+	return c.body(asset.buffer)
 })
 
 app.get('/blog/:slug', async (c) => {
