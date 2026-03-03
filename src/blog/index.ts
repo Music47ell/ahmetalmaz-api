@@ -3,6 +3,7 @@ import { join } from 'node:path'
 import matter from 'gray-matter'
 import { withCache } from '../utils/cache.js'
 import { logError } from '../utils/helpers.js'
+import { processMarkdown } from './processor.js'
 
 const CONTENT_DIR = process.env.CONTENT_PATH ?? join(process.cwd(), 'content')
 const CACHE_TTL = 86400 // 24 hours
@@ -79,10 +80,11 @@ export async function getBlogPost(slug: string): Promise<Post | null> {
 			const raw = await Bun.file(filePath).text()
 			const { data: frontmatter, content } = matter(raw)
 			if (frontmatter.draft !== false) return null
+			const html = await processMarkdown(content)
 			return {
 				slug,
 				frontmatter: { ...frontmatter, ...getReadingStats(content) },
-				content,
+				content: html,
 			}
 		} catch (err) {
 			logError(`Failed to read post "${slug}"`, err)
