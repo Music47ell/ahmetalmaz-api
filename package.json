@@ -9,7 +9,7 @@
   "dependencies": {
     "@expressive-code/plugin-line-numbers": "^0.41.7",
     "canvas": "^3.2.1",
-    "fast-xml-parser": "^5.4.1",
+    "fast-xml-parser": "^5.4.2",
     "gray-matter": "^4.0.3",
     "hono": "^4.12.3",
     "kleur": "^4.1.5",
@@ -20,7 +20,8 @@
     "remark-rehype": "^11.1.2",
     "string-width": "^8.2.0",
     "unified": "^11.0.5",
-    "unist-util-visit": "^5.1.0"
+    "unist-util-visit": "^5.1.0",
+    "webdav": "^5.9.0"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.4",
