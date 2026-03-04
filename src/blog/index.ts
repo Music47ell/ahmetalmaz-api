@@ -10,7 +10,7 @@ import {
 import { processMarkdown } from './processor.js'
 
 const WEBDAV_URL = process.env.WEBDAV_URL
-const CONTENT_PATH = process.env.CONTENT_PATH ?? ''
+const CONTENT_PATH = 'content'
 const CACHE_TTL = 86400 // 24 hours
 const WORDS_PER_MINUTE = 200
 
