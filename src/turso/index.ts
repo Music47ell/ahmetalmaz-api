@@ -7,141 +7,143 @@ import {
 	getFlagEmoji,
 } from '../utils/helpers.js'
 
-const getBlogViews = () => {
-	const row = db
-		.query<{ total: number }, []>('SELECT COUNT(*) as total FROM analytics')
-		.get()
-	return row?.total ?? 0
+const getBlogViews = async () => {
+	const result = await db.execute('SELECT COUNT(*) as total FROM analytics')
+	return (result.rows[0]?.total as number) ?? 0
 }
 
-const getBlogViewsBySlug = (slug: string) => {
-	const row = db
-		.query<{ total: number }, [string]>(
-			'SELECT COUNT(*) as total FROM analytics WHERE slug = ?',
-		)
-		.get(decodeURI(`/blog/${slug}`))
-	return row?.total ?? 0
+const getBlogViewsBySlug = async (slug: string) => {
+	const result = await db.execute({
+		sql: 'SELECT COUNT(*) as total FROM analytics WHERE slug = ?',
+		args: [decodeURI(`/blog/${slug}`)],
+	})
+	return (result.rows[0]?.total as number) ?? 0
 }
 
 const getAnalytics = async () => {
 	type Row = Record<string, unknown>
 
-	const countries = db
-		.query<{ flag: string; country: string; total: number }, []>(
+	const countries = (
+		await db.execute(
 			'SELECT flag, country, COUNT(country) as total FROM analytics WHERE isBot = 0 GROUP BY flag, country ORDER BY total DESC LIMIT 10',
 		)
-		.all()
-		.map((r) => ({
-			flag: r.flag || '🌍',
-			country: r.country || 'Unknown',
-			total: r.total,
-		}))
+	).rows.map((r) => ({
+		flag: (r.flag as string) || '🌍',
+		country: (r.country as string) || 'Unknown',
+		total: r.total as number,
+	}))
 
-	const cities = db
-		.query<{ flag: string; city: string; total: number }, []>(
+	const cities = (
+		await db.execute(
 			'SELECT flag, city, COUNT(city) as total FROM analytics WHERE isBot = 0 GROUP BY flag, city ORDER BY total DESC LIMIT 10',
 		)
-		.all()
-		.map((r) => ({
-			flag: r.flag || '🌍',
-			city: r.city || 'Unknown',
-			total: r.total,
-		}))
+	).rows.map((r) => ({
+		flag: (r.flag as string) || '🌍',
+		city: (r.city as string) || 'Unknown',
+		total: r.total as number,
+	}))
 
-	const referrers = db
-		.query<{ referrer: string; total: number }, []>(
+	const referrers = (
+		await db.execute(
 			"SELECT referrer, COUNT(referrer) as total FROM analytics WHERE referrer NOT LIKE '%.ahmetalmaz.com%' AND statusCode = 200 AND isBot = 0 GROUP BY referrer ORDER BY COUNT(referrer) DESC LIMIT 10",
 		)
-		.all()
-		.map((r) => ({ referrer: r.referrer || 'Unknown', total: r.total }))
+	).rows.map((r) => ({
+		referrer: (r.referrer as string) || 'Unknown',
+		total: r.total as number,
+	}))
 
-	const slugs = db
-		.query<{ slug: string; title: string; total: number }, []>(
+	const slugs = (
+		await db.execute(
 			"SELECT slug, title, COUNT(slug) as total FROM analytics WHERE title NOT LIKE '%ahmetalmaz%' AND statusCode = 200 AND isBot = 0 GROUP BY slug ORDER BY total DESC LIMIT 10",
 		)
-		.all()
-		.map((r) => ({
-			slug: r.slug || 'Unknown',
-			title: r.title || 'Unknown',
-			total: r.total,
-		}))
+	).rows.map((r) => ({
+		slug: (r.slug as string) || 'Unknown',
+		title: (r.title as string) || 'Unknown',
+		total: r.total as number,
+	}))
 
-	const browsers = db
-		.query<{ browser: string; total: number }, []>(
+	const browsers = (
+		await db.execute(
 			'SELECT browser, COUNT(browser) as total FROM analytics WHERE isBot = 0 GROUP BY browser ORDER BY total DESC LIMIT 10',
 		)
-		.all()
-		.map((r) => ({ browser: r.browser || 'Unknown', total: r.total }))
+	).rows.map((r) => ({
+		browser: (r.browser as string) || 'Unknown',
+		total: r.total as number,
+	}))
 
-	const operatingSystems = db
-		.query<{ os: string; total: number }, []>(
+	const operatingSystems = (
+		await db.execute(
 			'SELECT os, COUNT(os) as total FROM analytics WHERE isBot = 0 GROUP BY os ORDER BY total DESC LIMIT 10',
 		)
-		.all()
-		.map((r) => ({ os: r.os || 'Unknown', total: r.total }))
+	).rows.map((r) => ({
+		os: (r.os as string) || 'Unknown',
+		total: r.total as number,
+	}))
 
-	const deviceTypes = db
-		.query<{ deviceType: string; total: number }, []>(
+	const deviceTypes = (
+		await db.execute(
 			'SELECT deviceType, COUNT(deviceType) as total FROM analytics WHERE isBot = 0 GROUP BY deviceType ORDER BY total DESC LIMIT 10',
 		)
-		.all()
-		.map((r) => ({ type: r.deviceType || 'Unknown', total: r.total }))
+	).rows.map((r) => ({
+		type: (r.deviceType as string) || 'Unknown',
+		total: r.total as number,
+	}))
 
 	const monthlyBase =
 		"eventType = 'pageview' AND timestamp > (strftime('%s','now','-30 days') * 1000) AND isBot = 0"
 
 	const monthlyPageViewsStats =
-		db
-			.query<{ total: number }, []>(
+		((
+			await db.execute(
 				`SELECT COUNT(*) as total FROM analytics WHERE ${monthlyBase}`,
 			)
-			.get()?.total ?? 0
+		).rows[0]?.total as number) ?? 0
 
 	const monthlyVisitsStats =
-		db
-			.query<{ total: number }, []>(
+		((
+			await db.execute(
 				`SELECT COUNT(DISTINCT sessionId) as total FROM analytics WHERE ${monthlyBase}`,
 			)
-			.get()?.total ?? 0
+		).rows[0]?.total as number) ?? 0
 
 	const monthlyVisitorsStats =
-		db
-			.query<{ total: number }, []>(
+		((
+			await db.execute(
 				`SELECT COUNT(DISTINCT visitorId) as total FROM analytics WHERE ${monthlyBase}`,
 			)
-			.get()?.total ?? 0
+		).rows[0]?.total as number) ?? 0
 
 	const monthlyVisitDurationStats =
-		db
-			.query<{ total: number }, []>(
+		((
+			await db.execute(
 				`SELECT AVG(sessionDuration) as total FROM (SELECT (MAX(timestamp) - MIN(timestamp)) as sessionDuration FROM analytics WHERE ${monthlyBase} GROUP BY sessionId)`,
 			)
-			.get()?.total ?? 0
+		).rows[0]?.total as number) ?? 0
 
 	const monthlyBounceRateStats =
-		db
-			.query<{ total: number }, []>(
+		((
+			await db.execute(
 				`SELECT (SELECT COUNT(*) FROM (SELECT sessionId FROM analytics WHERE ${monthlyBase} GROUP BY sessionId HAVING COUNT(*) = 1)) * 100.0 / (SELECT COUNT(DISTINCT sessionId) FROM analytics WHERE ${monthlyBase}) as total`,
 			)
-			.get()?.total ?? 0
+		).rows[0]?.total as number) ?? 0
 
-	const monthlyEntryPagesStats = db
-		.query<Row, []>(
+	const monthlyEntryPagesStats = (
+		await db.execute(
 			`SELECT slug, COUNT(*) as total FROM (SELECT slug FROM analytics a WHERE ${monthlyBase} AND timestamp = (SELECT MIN(timestamp) FROM analytics WHERE sessionId = a.sessionId AND eventType = 'pageview')) GROUP BY slug ORDER BY total DESC`,
 		)
-		.all()
+	).rows as unknown as Row[]
 
-	const monthlyExitPagesStats = db
-		.query<Row, []>(
+	const monthlyExitPagesStats = (
+		await db.execute(
 			`SELECT slug, COUNT(*) as total FROM (SELECT slug FROM analytics a WHERE ${monthlyBase} AND timestamp = (SELECT MAX(timestamp) FROM analytics WHERE sessionId = a.sessionId AND eventType = 'pageview')) GROUP BY slug ORDER BY total DESC`,
 		)
-		.all()
+	).rows as unknown as Row[]
 
-	const monthlyLanguageStats = db
-		.query<Row, []>(
+	const monthlyLanguageStats = (
+		await db.execute(
 			`SELECT language, COUNT(*) as total FROM analytics WHERE timestamp > (strftime('%s','now','-30 days') * 1000) AND isBot = 0 GROUP BY language ORDER BY total DESC`,
 		)
-		.all()
+	).rows as unknown as Row[]
 
 	return {
 		monthlyPageViewsStats,
@@ -162,7 +164,7 @@ const getAnalytics = async () => {
 	}
 }
 
-const updateAnalytics = (data: {
+const updateAnalytics = async (data: {
 	visitorId: string
 	sessionId: string
 	eventType: string
@@ -194,8 +196,8 @@ const updateAnalytics = (data: {
 	userAgent?: string
 	statusCode: number
 }) => {
-	db.query(
-		`INSERT INTO analytics (
+	await db.execute({
+		sql: `INSERT INTO analytics (
 visitorId, sessionId, eventType, eventName, title, slug, referrer,
 flag, countryCode, country, continent, region, regionCode,
 city, latitude, longitude, timezone,
@@ -212,38 +214,39 @@ $deviceType, $deviceVendor, $deviceModel,
 $language, $os, $osVersion, $screenResolution, $userAgent,
 $statusCode, $isBot
 )`,
-	).run({
-		$visitorId: data.visitorId,
-		$sessionId: data.sessionId,
-		$eventType: data.eventType,
-		$eventName: data.eventName ?? '',
-		$title: data.title,
-		$slug: data.slug,
-		$referrer: data.referrer,
-		$flag: data.flag,
-		$countryCode: data.countryCode,
-		$country: data.country,
-		$continent: data.continent ?? 'Unknown',
-		$region: data.region ?? 'Unknown',
-		$regionCode: data.regionCode ?? 'Unknown',
-		$city: data.city,
-		$latitude: data.latitude ?? 0,
-		$longitude: data.longitude ?? 0,
-		$timezone: data.timezone ?? 'Unknown',
-		$browser: data.browser ?? 'Unknown',
-		$browserVersion: data.browserVersion ?? '',
-		$engine: data.engine ?? 'Unknown',
-		$engineVersion: data.engineVersion ?? '',
-		$deviceType: data.deviceType ?? 'Unknown',
-		$deviceVendor: data.deviceVendor ?? 'Unknown',
-		$deviceModel: data.deviceModel ?? 'Unknown',
-		$language: data.language ?? '',
-		$os: data.os ?? 'Unknown',
-		$osVersion: data.osVersion ?? '',
-		$screenResolution: data.screenResolution ?? '',
-		$userAgent: data.userAgent ?? 'Unknown',
-		$statusCode: data.statusCode,
-		$isBot: detectBot(data.userAgent ?? '', data.referrer) ? 1 : 0,
+		args: {
+			visitorId: data.visitorId,
+			sessionId: data.sessionId,
+			eventType: data.eventType,
+			eventName: data.eventName ?? '',
+			title: data.title,
+			slug: data.slug,
+			referrer: data.referrer,
+			flag: data.flag,
+			countryCode: data.countryCode,
+			country: data.country,
+			continent: data.continent ?? 'Unknown',
+			region: data.region ?? 'Unknown',
+			regionCode: data.regionCode ?? 'Unknown',
+			city: data.city,
+			latitude: data.latitude ?? 0,
+			longitude: data.longitude ?? 0,
+			timezone: data.timezone ?? 'Unknown',
+			browser: data.browser ?? 'Unknown',
+			browserVersion: data.browserVersion ?? '',
+			engine: data.engine ?? 'Unknown',
+			engineVersion: data.engineVersion ?? '',
+			deviceType: data.deviceType ?? 'Unknown',
+			deviceVendor: data.deviceVendor ?? 'Unknown',
+			deviceModel: data.deviceModel ?? 'Unknown',
+			language: data.language ?? '',
+			os: data.os ?? 'Unknown',
+			osVersion: data.osVersion ?? '',
+			screenResolution: data.screenResolution ?? '',
+			userAgent: data.userAgent ?? 'Unknown',
+			statusCode: data.statusCode,
+			isBot: detectBot(data.userAgent ?? '', data.referrer) ? 1 : 0,
+		},
 	})
 }
 
@@ -296,7 +299,7 @@ const handleAnalytics = async (c: Context) => {
 			return new Response('Missing required body data', { status: 400 })
 		}
 
-		updateAnalytics({
+		await updateAnalytics({
 			visitorId,
 			sessionId,
 			eventType,

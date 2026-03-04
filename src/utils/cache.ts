@@ -1,8 +1,6 @@
 import { db } from '../db.js'
 import { logError } from './helpers.js'
 
-const pruneCache = db.query('DELETE FROM cache WHERE expires_at < ?')
-
 export const withCache = async <T>(
 	key: string,
 	ttl: number,
@@ -11,12 +9,12 @@ export const withCache = async <T>(
 	const now = Math.floor(Date.now() / 1000)
 
 	try {
-		const row = db
-			.query<{ value: string }, [string, number]>(
-				'SELECT value FROM cache WHERE key = ? AND expires_at > ?',
-			)
-			.get(key, now)
-		if (row) return JSON.parse(row.value) as T
+		const result = await db.execute({
+			sql: 'SELECT value FROM cache WHERE key = ? AND expires_at > ?',
+			args: [key, now],
+		})
+		const row = result.rows[0]
+		if (row) return JSON.parse(row.value as string) as T
 	} catch {
 		// cache miss or corrupted data – fall through to fetch
 	}
@@ -25,10 +23,14 @@ export const withCache = async <T>(
 
 	if (data !== null && data !== undefined) {
 		try {
-			db.query(
-				'INSERT OR REPLACE INTO cache (key, value, expires_at) VALUES (?, ?, ?)',
-			).run(key, JSON.stringify(data), now + ttl)
-			pruneCache.run(now)
+			await db.execute({
+				sql: 'INSERT OR REPLACE INTO cache (key, value, expires_at) VALUES (?, ?, ?)',
+				args: [key, JSON.stringify(data), now + ttl],
+			})
+			await db.execute({
+				sql: 'DELETE FROM cache WHERE expires_at < ?',
+				args: [now],
+			})
 		} catch (err) {
 			logError(`withCache: failed to write key "${key}"`, err)
 		}

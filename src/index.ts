@@ -103,12 +103,12 @@ app.post('/heartbeat', async (c) => {
 	const { visitorId, slug } = await c.req.json()
 	if (!visitorId) return c.json({ error: 'Missing visitorId' }, 400)
 
-	upsertOnlineVisitor(visitorId, slug || '/')
+	await upsertOnlineVisitor(visitorId, slug || '/')
 
 	return c.json({ ok: true })
 })
-app.get('/online', (c) => {
-	return c.json(getOnlineVisitors())
+app.get('/online', async (c) => {
+	return c.json(await getOnlineVisitors())
 })
 
 app.get('/insight', async (c) => c.json(await getAnalytics()))
@@ -143,17 +143,17 @@ app.get('/monkeytype/results', async (c) => {
 	}
 })
 
-app.get('/quotes/random', (c) => {
+app.get('/quotes/random', async (c) => {
 	try {
-		return c.json(getRandomQuote())
+		return c.json(await getRandomQuote())
 	} catch (error) {
 		return c.json({ error: (error as Error).message }, 500)
 	}
 })
 
-app.get('/lyrics/random', (c) => {
+app.get('/lyrics/random', async (c) => {
 	try {
-		return c.json(getRandomLyric())
+		return c.json(await getRandomLyric())
 	} catch (error) {
 		return c.json({ error: (error as Error).message }, 500)
 	}

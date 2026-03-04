@@ -1,12 +1,17 @@
-import { Database } from 'bun:sqlite'
+import { createClient } from '@libsql/client'
 
-const DB_PATH = process.env.DATABASE_PATH || './app.db'
+if (!process.env.TURSO_DATABASE_URL)
+	throw new Error('TURSO_DATABASE_URL is required')
 
-export const db = new Database(DB_PATH, { create: true })
-
-db.exec('PRAGMA journal_mode = DELETE')
-db.exec('PRAGMA synchronous = NORMAL')
-db.exec('PRAGMA foreign_keys = ON')
+export const db = createClient({
+	url: process.env.TURSO_DATABASE_URL,
+	authToken: process.env.TURSO_AUTH_TOKEN,
+})
 
 const schema = await Bun.file(`${import.meta.dir}/schema.sql`).text()
-db.exec(schema)
+for (const sql of schema
+	.split(';')
+	.map((s) => s.trim())
+	.filter(Boolean)) {
+	await db.execute(sql)
+}

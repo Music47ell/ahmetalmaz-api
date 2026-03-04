@@ -1,13 +1,13 @@
 import matter from 'gray-matter'
 import { withCache } from '../utils/cache.js'
 import { logError } from '../utils/helpers.js'
-import { processMarkdown } from './processor.js'
 import {
 	fileExists,
 	getWebDAVClient,
 	getWebDAVFile,
 	listWebDAVDirectory,
-} from './webdav.js'
+} from '../utils/webdav.js'
+import { processMarkdown } from './processor.js'
 
 const WEBDAV_URL = process.env.WEBDAV_URL
 const CONTENT_PATH = process.env.CONTENT_PATH ?? ''
