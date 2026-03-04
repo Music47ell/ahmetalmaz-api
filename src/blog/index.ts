@@ -3,8 +3,8 @@ import { withCache } from '../utils/cache.js'
 import { logError } from '../utils/helpers.js'
 import {
 	fileExists,
-	getWebDAVClient,
 	getWebDAVFile,
+	getWebDAVFileBuffer,
 	listWebDAVDirectory,
 } from '../utils/webdav.js'
 import { processMarkdown } from './processor.js'
@@ -43,7 +43,7 @@ function getReadingStats(content: string): {
 async function findIndexFile(slugDir: string): Promise<string | null> {
 	for (const ext of ['md', 'mdx']) {
 		const filePath = `${slugDir}/index.${ext}`
-		if (await fileExists(filePath)) return filePath
+		if (await fileExists(WEBDAV_URL, filePath)) return filePath
 	}
 	return null
 }
@@ -60,16 +60,16 @@ export interface Post extends PostMeta {
 export async function getBlogList(): Promise<PostMeta[]> {
 	return withCache<PostMeta[]>('blog:list', CACHE_TTL, async () => {
 		try {
-			const entries = await listWebDAVDirectory(CONTENT_PATH)
+			const entries = await listWebDAVDirectory(WEBDAV_URL, CONTENT_PATH)
 			const slugs = entries.filter((e) => e.isDirectory).map((e) => e.filename)
 
 			const posts: PostMeta[] = []
 			for (const slug of slugs) {
-				const slugPath = CONTENT_PATH ? `${CONTENT_PATH}/${slug}` : slug
+				const slugPath = `${CONTENT_PATH}/${slug}`
 				const filePath = await findIndexFile(slugPath)
 				if (!filePath) continue
 				try {
-					const raw = await getWebDAVFile(filePath)
+					const raw = await getWebDAVFile(WEBDAV_URL, filePath)
 					if (!raw) continue
 
 					const { data: frontmatter, content } = matter(raw)
@@ -97,12 +97,12 @@ export async function getBlogList(): Promise<PostMeta[]> {
 export async function getBlogPost(slug: string): Promise<Post | null> {
 	if (!slug || slug.includes('/') || slug.includes('\\') || slug.includes('..'))
 		return null
-	const slugDir = CONTENT_PATH ? `${CONTENT_PATH}/${slug}` : slug
+	const slugDir = `${CONTENT_PATH}/${slug}`
 	return withCache<Post | null>(`blog:${slug}`, CACHE_TTL, async () => {
 		const filePath = await findIndexFile(slugDir)
 		if (!filePath) return null
 		try {
-			const raw = await getWebDAVFile(filePath)
+			const raw = await getWebDAVFile(WEBDAV_URL, filePath)
 			if (!raw) return null
 
 			const { data: frontmatter, content } = matter(raw)
@@ -123,23 +123,26 @@ export async function getBlogPost(slug: string): Promise<Post | null> {
 export async function getBlogAsset(
 	slug: string,
 	filename: string,
-): Promise<{ buffer: Buffer; contentType: string } | null> {
-	const assetPath = CONTENT_PATH
-		? `${CONTENT_PATH}/${slug}/assets/${filename}`
-		: `${slug}/assets/${filename}`
-	// Basic path traversal check
+): Promise<{ buffer: Uint8Array; contentType: string } | null> {
+	const fullPath = `${CONTENT_PATH}/${slug}/assets/${filename}`
+
 	if (
-		assetPath.includes('..') ||
-		assetPath.includes('\\') ||
-		(CONTENT_PATH && !assetPath.startsWith(CONTENT_PATH))
+		fullPath.includes('..') ||
+		fullPath.includes('\\') ||
+		!fullPath.startsWith(CONTENT_PATH)
 	) {
 		return null
 	}
 
 	try {
-		const client = getWebDAVClient()
-		const raw = await client.getFileContents(assetPath)
-		const buffer = Buffer.isBuffer(raw) ? raw : Buffer.from(raw as ArrayBuffer)
+		const raw = await getWebDAVFileBuffer(WEBDAV_URL, fullPath)
+		if (!raw) return null
+
+		const buffer =
+			typeof Buffer !== 'undefined'
+				? new Uint8Array(Buffer.from(raw))
+				: new Uint8Array(raw)
+
 		const ext = filename.split('.').pop()?.toLowerCase() ?? ''
 		const contentType = MIME_TYPES[ext] ?? 'application/octet-stream'
 		return { buffer, contentType }
