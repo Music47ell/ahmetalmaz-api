@@ -8,6 +8,7 @@ import {
 	listWebDAVDirectory,
 } from '../utils/webdav.js'
 import { processMarkdown } from './processor.js'
+import { getMastodonStatus } from '../utils/mastodon.js'
 
 const WEBDAV_URL = process.env.WEBDAV_URL
 const CONTENT_PATH = 'content'
@@ -97,20 +98,35 @@ export async function getBlogList(): Promise<PostMeta[]> {
 export async function getBlogPost(slug: string): Promise<Post | null> {
 	if (!slug || slug.includes('/') || slug.includes('\\') || slug.includes('..'))
 		return null
+
 	const slugDir = `${CONTENT_PATH}/${slug}`
+
 	return withCache<Post | null>(`blog:${slug}`, CACHE_TTL, async () => {
 		const filePath = await findIndexFile(slugDir)
 		if (!filePath) return null
+
 		try {
 			const raw = await getWebDAVFile(WEBDAV_URL, filePath)
 			if (!raw) return null
 
 			const { data: frontmatter, content } = matter(raw)
+
 			if (frontmatter.draft !== false) return null
+
 			const html = await processMarkdown(content)
+
+			let toot = null
+			if (frontmatter.toot) {
+				try {
+					const res = await getMastodonStatus(frontmatter.toot)
+					toot = res.toot
+				} catch {}
+			}
+
 			return {
 				slug,
 				frontmatter: { ...frontmatter, ...getReadingStats(content) },
+				toot,
 				content: html,
 			}
 		} catch (err) {
