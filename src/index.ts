@@ -11,6 +11,7 @@ import { getNowPlaying } from '../src/listenbrainz/nowPlaying.js'
 import { getRecentTracks } from '../src/listenbrainz/recentTracks.js'
 import { getListenBrainzStats } from '../src/listenbrainz/stats.js'
 import { getRandomLyric } from '../src/lyrics/index.js'
+import { getResume} from '../src/resume/index.js'
 import { getMonkeyTypeStats } from '../src/monkeytype/stats.js'
 import { getMonkeyTypeResults } from '../src/monkeytype/topResults.js'
 import { getRandomQuote } from '../src/quotes/index.js'
@@ -55,6 +56,22 @@ app.use(
 )
 
 app.get('/', async (c) => c.text(getFullMessage()))
+
+app.get('/resume', async (c) => {
+	try {
+		const file = await getResume()
+		return new Response(file, {
+			status: 200,
+			headers: {
+				'Content-Type': 'application/pdf',
+				'Content-Disposition': 'inline; filename="ahmetalmaz-resume.pdf"',
+				'Cache-Control': 'public, max-age=86400'
+			}
+		})
+	} catch (error) {
+		return c.json({ error: (error as Error).message }, 500)
+	}
+})
 
 app.get('/og', async (c) => {
 	const rawUrl = c.req.raw.url.includes('&amp;')
