@@ -26,6 +26,7 @@ RUN bun install --production
 
 # Copy source files from builder
 COPY --from=builder /app/src ./src
+COPY fonts ./fonts
 
 EXPOSE 3000
 CMD ["bun", "run", "src/index.ts"]
