@@ -1,4 +1,8 @@
-import { createCanvas } from 'canvas'
+import { createCanvas, registerFont } from 'canvas'
+
+registerFont('./fonts/Inter-VariableFont_opsz,wght.ttf', {
+  family: 'Inter'
+})
 
 export async function generateOg(
 	title: string,
@@ -28,7 +32,7 @@ export async function generateOg(
 	ctx.fillRect(0, 0, width, height)
 
 	ctx.fillStyle = colors.cullen
-	ctx.font = 'bold 72px DejaVu, sans-serif'
+	ctx.font = 'bold 72px Inter, sans-serif'
 	ctx.textAlign = 'left'
 	ctx.textBaseline = 'top'
 	ctx.shadowColor = 'rgba(0, 0, 0, 0.3)'
@@ -102,7 +106,7 @@ export async function generateOg(
 	ctx.lineTo(width, horizontalLineY)
 	ctx.stroke()
 
-	ctx.font = '28px DejaVu, sans-serif'
+	ctx.font = '28px Inter, sans-serif'
 	ctx.fillStyle = colors.cullen
 	ctx.shadowColor = 'rgba(0, 0, 0, 0.2)'
 	ctx.shadowBlur = 5
@@ -124,7 +128,7 @@ export async function generateOg(
 		)
 	})
 
-	ctx.font = '24px DejaVu, sans-serif'
+	ctx.font = '24px Inter, sans-serif'
 	ctx.fillStyle = colors.lincoln
 	ctx.shadowColor = 'rgba(0, 0, 0, 0.2)'
 	ctx.shadowBlur = 5
@@ -135,7 +139,7 @@ export async function generateOg(
 	const dateY = (height - horizontalLineY - dateHeight) / 2 + horizontalLineY
 	ctx.fillText(pubdate, padding, dateY)
 
-	ctx.font = '24px DejaVu, sans-serif'
+	ctx.font = '24px Inter, sans-serif'
 	ctx.fillStyle = colors.marcelin
 	ctx.shadowColor = 'rgba(0, 0, 0, 0.2)'
 	ctx.shadowBlur = 5
