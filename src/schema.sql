@@ -39,6 +39,8 @@ CREATE INDEX IF NOT EXISTS idx_analytics_timestamp ON analytics(timestamp);
 CREATE TABLE IF NOT EXISTS cache (
   key TEXT PRIMARY KEY,
   value TEXT NOT NULL,
+  etag TEXT,
+  lastmod TEXT,
   expires_at INTEGER NOT NULL
 );
 
@@ -51,4 +53,36 @@ CREATE TABLE IF NOT EXISTS online_visitors (
 );
 
 CREATE INDEX IF NOT EXISTS idx_online_visitors_last_seen ON online_visitors(last_seen);
+
+CREATE TABLE IF NOT EXISTS posts_cache (
+  slug TEXT PRIMARY KEY,
+  content_hash TEXT NOT NULL,
+  rendered_html TEXT NOT NULL,
+  frontmatter_json TEXT NOT NULL,
+  word_count INTEGER NOT NULL DEFAULT 0,
+  reading_time INTEGER NOT NULL DEFAULT 0,
+  mastodon_embed_json TEXT,
+  etag TEXT NOT NULL,
+  created_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_posts_cache_updated_at ON posts_cache(updated_at);
+
+CREATE TABLE IF NOT EXISTS blog_list_cache (
+  id INTEGER PRIMARY KEY CHECK (id = 1),
+  posts_index_json TEXT NOT NULL,
+  list_etag TEXT NOT NULL,
+  last_rebuilt_at INTEGER NOT NULL,
+  dir_state_checksum TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS posts_registry (
+  slug TEXT PRIMARY KEY,
+  content_hash TEXT NOT NULL,
+  webdav_path TEXT NOT NULL,
+  last_checked_at INTEGER NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_posts_registry_last_checked_at ON posts_registry(last_checked_at);
 
