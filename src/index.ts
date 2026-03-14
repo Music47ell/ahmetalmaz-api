@@ -180,27 +180,40 @@ app.use('/blog', bearerAuth({ token: process.env.BLOG_TOKEN ?? '' }))
 app.use('/blog/:slug', bearerAuth({ token: process.env.BLOG_TOKEN ?? '' }))
 
 app.get('/blog', async (c) => {
-	try {
-		const posts = await getBlogList()
-		return c.json(posts)
-	} catch (error) {
-		return c.json({ error: (error as Error).message }, 500)
-	}
-})
-
-app.get('/blog/:slug/assets/:file', async (c) => {
-	const { slug, file } = c.req.param()
-	const asset = await getBlogAsset(slug, file)
-	if (!asset) return c.json({ error: 'Not found' }, 404)
-	c.header('Content-Type', asset.contentType)
-	return c.body(asset.buffer)
+  try {
+    const posts = await getBlogList(c)
+    return c.json(posts)
+  } catch (err) {
+    if ((err as Error).message === 'NOT_MODIFIED') {
+      return c.body(null, 304)
+    }
+    throw err
+  }
 })
 
 app.get('/blog/:slug', async (c) => {
-	const { slug } = c.req.param()
-	const post = await getBlogPost(slug)
-	if (!post) return c.json({ error: 'Post not found' }, 404)
-	return c.json(post)
+  const slug = c.req.param('slug')
+  try {
+    const post = await getBlogPost(slug, c)
+    if (!post) return c.notFound()
+    return c.json(post)
+  } catch (err) {
+    if ((err as Error).message === 'NOT_MODIFIED') {
+      return c.body(null, 304)
+    }
+    throw err
+  }
+})
+
+app.get('/blog/:slug/assets/:filename', async (c) => {
+  const slug = c.req.param('slug')
+  const filename = c.req.param('filename')
+  
+  const asset = await getBlogAsset(slug, filename)
+  if (!asset) return c.notFound()
+  
+  c.header('Cache-Control', 'public, max-age=31536000, immutable')
+  return c.body(asset.buffer, 200, { 'Content-Type': asset.contentType })
 })
 
 export default {
