@@ -1,0 +1,9 @@
+{
+	"compatibility_date": "2026-04-01",
+	"compatibility_flags": ["nodejs_compat"],
+	"name": "ahmetalmaz-api",
+	"main": "src/index.ts",
+	"observability": {
+		"enabled": true
+	}
+}
