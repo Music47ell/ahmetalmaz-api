@@ -1,4 +1,5 @@
 import type { Context } from 'hono'
+import { z } from 'zod'
 import { db } from '../db.js'
 import { detectBot } from '../utils/botFilter.js'
 import {
@@ -45,7 +46,7 @@ const getAnalytics = async () => {
 
 	const referrers = (
 		await db.execute({
-			sql: "SELECT referrer, COUNT(referrer) as total FROM analytics WHERE referrer NOT LIKE '%.ahmetalmaz.com%' AND statusCode = 200 AND isBot = 0 GROUP BY referrer ORDER BY COUNT(referrer) DESC LIMIT 10",
+			sql: "SELECT referrer, COUNT(referrer) as total FROM analytics WHERE referrer NOT LIKE '%ahmetalmaz.com%' AND statusCode = 200 AND isBot = 0 GROUP BY referrer ORDER BY COUNT(referrer) DESC LIMIT 10",
 		})
 	).rows.map((r) => ({
 		referrer: (r.referrer as string) || 'Unknown',
@@ -314,8 +315,13 @@ const handleAnalytics = async (c: Context) => {
 			eventType,
 			eventName,
 			title,
-			slug: slug.endsWith('/') ? slug.slice(0, -1) : slug,
-			referrer,
+			slug: slug === '/' ? '/' : slug.endsWith('/') ? slug.slice(0, -1) : slug,
+			referrer:
+				referrer === '/'
+					? '/'
+					: referrer.endsWith('/')
+						? referrer.slice(0, -1)
+						: referrer,
 			browser,
 			browserVersion,
 			engine,
@@ -354,6 +360,7 @@ export {
 	getAnalytics,
 	getBlogViews,
 	getBlogViewsBySlug,
+	type getRecentEvents,
 	handleAnalytics,
 	updateAnalytics,
 }

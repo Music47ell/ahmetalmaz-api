@@ -1,7 +1,5 @@
 import { Hono } from 'hono'
-import { bearerAuth } from 'hono/bearer-auth'
 import { cors } from 'hono/cors'
-import { getBlogAsset, getBlogList, getBlogPost } from '../src/blog/index.js'
 import { getCodeStatsStats } from '../src/codestats/stats.js'
 import { getTopLanguages } from '../src/codestats/topLanguages.js'
 import { getFullMessage } from '../src/curl-card/index.js'
@@ -10,11 +8,12 @@ import { getGoodreadsStats } from '../src/goodreads/stats.js'
 import { getNowPlaying } from '../src/listenbrainz/nowPlaying.js'
 import { getRecentTracks } from '../src/listenbrainz/recentTracks.js'
 import { getListenBrainzStats } from '../src/listenbrainz/stats.js'
-import { getRandomLyric } from '../src/lyrics/index.js'
-import { getResume} from '../src/resume/index.js'
 import { getMonkeyTypeStats } from '../src/monkeytype/stats.js'
 import { getMonkeyTypeResults } from '../src/monkeytype/topResults.js'
-import { getRandomQuote } from '../src/quotes/index.js'
+import { getSimklStats } from '../src/simkl/stats.js'
+import { getSimklWatchedAnime } from '../src/simkl/watchedAnime.js'
+import { getSimklWatchedMovies } from '../src/simkl/watchedMovies.js'
+import { getSimklWatchedShows } from '../src/simkl/watchedShows.js'
 import { getNowWatching } from '../src/trakt/nowWatching.js'
 import { getTraktStats } from '../src/trakt/stats.js'
 import { getWatchedMovies } from '../src/trakt/watchedMovies.js'
@@ -24,7 +23,6 @@ import {
 	getOnlineVisitors,
 	upsertOnlineVisitor,
 } from '../src/utils/onlineVisitors.js'
-import { generateOg } from './ogGenerator/index.js'
 
 const app = new Hono()
 
@@ -57,46 +55,6 @@ app.use(
 
 app.get('/', async (c) => c.text(getFullMessage()))
 
-app.get('/resume', async (c) => {
-	try {
-		const file = await getResume()
-		return new Response(file, {
-			status: 200,
-			headers: {
-				'Content-Type': 'application/pdf',
-				'Content-Disposition': 'inline; filename="ahmetalmaz-resume.pdf"',
-				'Cache-Control': 'public, max-age=86400'
-			}
-		})
-	} catch (error) {
-		return c.json({ error: (error as Error).message }, 500)
-	}
-})
-
-app.get('/og', async (c) => {
-	const rawUrl = c.req.raw.url.includes('&amp;')
-		? c.req.raw.url.replace(/&amp;/g, '&')
-		: c.req.raw.url
-
-	const params = new URLSearchParams(rawUrl.split('?')[1] ?? '')
-
-	const title = params.get('title') ?? 'Default Title'
-	const description = params.get('description') ?? 'Default Description'
-	const pubdate = params.get('pubdate') ?? '2025-12-31'
-
-	try {
-		const domain = 'ahmetalmaz.com'
-
-		const image = await generateOg(title, description, pubdate, domain)
-
-		c.header('Content-Type', 'image/png')
-		return c.body(image)
-	} catch (error) {
-		console.error(error)
-		return c.json({ error: error.message || 'Failed to generate image' }, 500)
-	}
-})
-
 app.get('/listenbrainz/stats', async (c) =>
 	c.json(await getListenBrainzStats()),
 )
@@ -110,12 +68,45 @@ app.get('/trakt/now-watching', async (c) => c.json(await getNowWatching()))
 app.get('/trakt/watched-movies', async (c) => c.json(await getWatchedMovies()))
 app.get('/trakt/watched-shows', async (c) => c.json(await getWatchedShows()))
 
+app.get('/simkl/stats', async (c) => {
+	try {
+		return c.json(await getSimklStats())
+	} catch (error) {
+		return c.json({ error: (error as Error).message }, 500)
+	}
+})
+app.get('/simkl/watched-movies', async (c) => {
+	try {
+		const dateFrom = c.req.query('date_from')
+		return c.json(await getSimklWatchedMovies(dateFrom))
+	} catch (error) {
+		return c.json({ error: (error as Error).message }, 500)
+	}
+})
+app.get('/simkl/watched-shows', async (c) => {
+	try {
+		const dateFrom = c.req.query('date_from')
+		return c.json(await getSimklWatchedShows(dateFrom))
+	} catch (error) {
+		return c.json({ error: (error as Error).message }, 500)
+	}
+})
+app.get('/simkl/watched-anime', async (c) => {
+	try {
+		const dateFrom = c.req.query('date_from')
+		return c.json(await getSimklWatchedAnime(dateFrom))
+	} catch (error) {
+		return c.json({ error: (error as Error).message }, 500)
+	}
+})
+
 app.get('/codestats/stats', async (c) => c.json(await getCodeStatsStats()))
 app.get('/codestats/top-languages', async (c) =>
 	c.json(await getTopLanguages()),
 )
 
 app.post('/correct-horse-battery-staple', (c) => handleAnalytics(c))
+
 app.post('/heartbeat', async (c) => {
 	const { visitorId, slug } = await c.req.json()
 	if (!visitorId) return c.json({ error: 'Missing visitorId' }, 400)
@@ -150,7 +141,7 @@ app.get('/monkeytype/stats', async (c) => {
 })
 app.get('/monkeytype/results', async (c) => {
 	try {
-		const limit = Math.min(parseInt(c.req.query('limit') || '10'), 100)
+		const limit = Math.min(parseInt(c.req.query('limit') || '10', 10), 100)
 		const results = await getMonkeyTypeResults(limit)
 		return c.json(results)
 	} catch (error) {
@@ -160,64 +151,5 @@ app.get('/monkeytype/results', async (c) => {
 	}
 })
 
-app.get('/quotes/random', async (c) => {
-	try {
-		return c.json(await getRandomQuote())
-	} catch (error) {
-		return c.json({ error: (error as Error).message }, 500)
-	}
-})
-
-app.get('/lyrics/random', async (c) => {
-	try {
-		return c.json(await getRandomLyric())
-	} catch (error) {
-		return c.json({ error: (error as Error).message }, 500)
-	}
-})
-
-app.use('/blog', bearerAuth({ token: process.env.BLOG_TOKEN ?? '' }))
-app.use('/blog/:slug', bearerAuth({ token: process.env.BLOG_TOKEN ?? '' }))
-
-app.get('/blog', async (c) => {
-  try {
-    const posts = await getBlogList(c)
-    return c.json(posts)
-  } catch (err) {
-    if ((err as Error).message === 'NOT_MODIFIED') {
-      return c.body(null, 304)
-    }
-    throw err
-  }
-})
-
-app.get('/blog/:slug', async (c) => {
-  const slug = c.req.param('slug')
-  try {
-    const post = await getBlogPost(slug, c)
-    if (!post) return c.notFound()
-    return c.json(post)
-  } catch (err) {
-    if ((err as Error).message === 'NOT_MODIFIED') {
-      return c.body(null, 304)
-    }
-    throw err
-  }
-})
-
-app.get('/blog/:slug/assets/:filename', async (c) => {
-  const slug = c.req.param('slug')
-  const filename = c.req.param('filename')
-  
-  const asset = await getBlogAsset(slug, filename)
-  if (!asset) return c.notFound()
-  
-  c.header('Cache-Control', 'public, max-age=31536000, immutable')
-  return c.body(asset.buffer, 200, { 'Content-Type': asset.contentType })
-})
-
-export default {
-	port: 3000,
-	hostname: '0.0.0.0', // required for Docker
-	fetch: app.fetch,
-}
+// Cloudflare Workers compatible export
+export default app

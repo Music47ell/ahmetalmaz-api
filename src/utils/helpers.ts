@@ -298,10 +298,10 @@ const getCountryName = (code2: string) => {
 }
 
 export {
+	decodeCfHeader,
 	get_level,
 	get_level_progress,
 	get_next_level_xp,
-	getFlagEmoji,
-	decodeCfHeader,
 	getCountryName,
+	getFlagEmoji,
 }

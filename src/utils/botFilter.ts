@@ -42,6 +42,9 @@ export const BOT_UA_PATTERNS = [
 	// Archive bots
 	'ia_archiver',
 	'archive.org_bot',
+	// Assistants
+	'duckassistbot',
+	'wechat',
 ]
 
 /**

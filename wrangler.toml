@@ -1,0 +1,38 @@
+name = "ahmetalmaz-api"
+main = "src/index.ts"
+compatibility_date = "2026-04-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Keep runtime values in secrets to avoid accidentally deploying empty defaults.
+# Example:
+# wrangler secret put ALLOWED_ORIGINS
+# wrangler secret put USERNAME
+
+# Secrets (set via: wrangler secret put <SECRET_NAME>)
+# Required secrets:
+# - TURSO_DATABASE_URL
+# - TURSO_AUTH_TOKEN
+# - TRAKT_CLIENT_ID
+# - TMDB_API_TOKEN
+# - GOODREADS_READ_FEED
+# - MONKEYTYPE_API_KEY
+# - MONKEYTYPE_USERNAME
+# - SIMKL_CLIENT_ID
+# - SIMKL_ACCESS_TOKEN
+# - SIMKL_USER_ID
+# - USERNAME
+# - ALLOWED_ORIGINS
+
+# Usage:
+# wrangler secret put TURSO_DATABASE_URL
+# wrangler secret put TURSO_AUTH_TOKEN
+# wrangler secret put TRAKT_CLIENT_ID
+# wrangler secret put TMDB_API_TOKEN
+# wrangler secret put GOODREADS_READ_FEED
+# wrangler secret put MONKEYTYPE_API_KEY
+# wrangler secret put MONKEYTYPE_USERNAME
+# wrangler secret put SIMKL_CLIENT_ID
+# wrangler secret put SIMKL_ACCESS_TOKEN
+# wrangler secret put SIMKL_USER_ID
+# wrangler secret put USERNAME
+# wrangler secret put ALLOWED_ORIGINS

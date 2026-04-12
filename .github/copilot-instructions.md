@@ -3,8 +3,8 @@
 ## Commands
 
 ```bash
-bun run dev      # Start with hot reload (port 3000)
-bun run start    # Production start
+bun run workers:dev     # Local Cloudflare Worker (port 8787)
+bun run workers:deploy  # Deploy to Cloudflare Workers
 
 bunx biome check .          # Lint and format check
 bunx biome check --write .  # Auto-fix lint and format issues
@@ -14,22 +14,20 @@ No test suite exists.
 
 ## Architecture
 
-A [Hono](https://hono.dev/) HTTP API running on Bun. All routes are registered in `src/index.ts`. Each integration is a self-contained feature directory under `src/`:
+A [Hono](https://hono.dev/) HTTP API running on **Cloudflare Workers**. All routes are registered in `src/index.ts`. Each integration is a self-contained feature directory under `src/`:
 
-- `codestats/`, `listenbrainz/`, `trakt/`, `goodreads/`, `monkeytype/`, `quotes/`, `lyrics/` — third-party API integrations, each exposing named async functions consumed directly by `src/index.ts`
-- `turso/` — all analytics query logic (despite the directory name, the underlying DB is now Bun SQLite via `src/db.ts`)
-- `ogGenerator/` — dynamic PNG Open Graph image generation using `canvas`
+- `codestats/`, `listenbrainz/`, `trakt/`, `simkl/`, `goodreads/`, `monkeytype/`, `location/` — feature integrations consumed directly by `src/index.ts`
+- `turso/` — analytics query logic against Turso/libSQL
+- `ogGenerator/` — dynamic PNG Open Graph image generation via `workers-og`
 - `utils/` — shared utilities: `cache.ts`, `onlineVisitors.ts`, `helpers.ts`, `botFilter.ts`
 - `tmdb/` — TMDB helper used by Trakt routes for poster images
 - `curl-card/` — ASCII art served at `GET /`
 
-**Database**: Single SQLite file (`/data/app.db`) via Bun's built-in `bun:sqlite`. Schema is defined in `src/schema.sql` and applied at startup in `src/db.ts`. Three tables: `analytics`, `cache`, `online_visitors`.
-
-The app is deployed as a Docker container (multi-stage build) pushed to GHCR on every push to `main`. A `docker-compose.yml` mounts a named volume at `/data` to persist the SQLite file.
+**Database**: Turso (libSQL) remote database via `@libsql/client` in `src/db.ts`. No local schema bootstrapping in runtime.
 
 ## Key Conventions
 
-**Caching**: Wrap all external API fetches in `withCache(key, ttlSeconds, fn)` from `src/utils/cache.ts`. Cache is stored in the SQLite `cache` table (TTL checked via `expires_at` unix timestamp). No external cache service required.
+**Caching**: Wrap all external API fetches in `withCache(key, ttlSeconds, fn)` from `src/utils/cache.ts`. Cache is stored in Turso `cache` table (TTL checked via `expires_at` unix timestamp).
 
 **Online visitors**: Use `upsertOnlineVisitor(visitorId, slug)` and `getOnlineVisitors()` from `src/utils/onlineVisitors.ts`. Records expire after 30 s (checked at read time against `last_seen`).
 
@@ -39,7 +37,7 @@ The app is deployed as a Docker container (multi-stage build) pushed to GHCR on 
 
 **Adding a new integration**: Create a `src/<feature>/` directory with individual `*.ts` files per endpoint, import the exported async functions in `src/index.ts`, and register the routes there.
 
-**Formatting**: Tabs (width 2), single quotes, no semicolons — enforced by Biome. JSX is configured for `hono/jsx`.
+**Formatting**: Tabs (width 2), single quotes, no semicolons — enforced by Biome. JSX is configured for React.
 
 **Analytics endpoint**: The analytics ingestion route is obscured (`/correct-horse-battery-staple`) and geo data is sourced from Cloudflare headers (`cf-ipcountry`, `cf-ipcity`, etc.) — the API is expected to sit behind Cloudflare.
 
@@ -50,6 +48,15 @@ USERNAME                  # Shared username for CodeStats, ListenBrainz, Trakt
 TRAKT_CLIENT_ID
 TMDB_API_TOKEN
 GOODREADS_READ_FEED       # RSS URL for the Goodreads "read" shelf
-DATABASE_PATH             # Path to SQLite file (default: /data/app.db)
 ALLOWED_ORIGINS           # Comma-separated CORS origins
+TURSO_DATABASE_URL
+TURSO_AUTH_TOKEN
+MONKEYTYPE_API_KEY
+MONKEYTYPE_USERNAME
+SIMKL_CLIENT_ID
+SIMKL_USERNAME
+SIMKL_ACCESS_TOKEN
+TRACCAR_URL
+TRACCAR_TOKEN
+UPLOAD_API_KEY
 ```
