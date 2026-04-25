@@ -8,6 +8,9 @@ import {
 	getFlagEmoji,
 } from '../utils/helpers.js'
 
+const removeTrailingSlash = (value: string) =>
+	value === '/' ? '/' : value.replace(/\/+$/, '')
+
 const getBlogViews = async () => {
 	const result = await db.execute({
 		sql: 'SELECT COUNT(*) as total FROM analytics WHERE isBot = 0 AND statusCode = 200',
@@ -46,7 +49,21 @@ const getAnalytics = async () => {
 
 	const referrers = (
 		await db.execute({
-			sql: "SELECT referrer, COUNT(referrer) as total FROM analytics WHERE referrer NOT LIKE '%ahmetalmaz.com%' AND statusCode = 200 AND isBot = 0 GROUP BY referrer ORDER BY COUNT(referrer) DESC LIMIT 10",
+			sql: `SELECT
+				CASE
+					WHEN referrer = '/' THEN '/'
+					ELSE rtrim(referrer, '/')
+				END as referrer,
+				COUNT(*) as total
+			FROM analytics
+			WHERE referrer NOT LIKE '%ahmetalmaz.com%' AND statusCode = 200 AND isBot = 0
+			GROUP BY
+				CASE
+					WHEN referrer = '/' THEN '/'
+					ELSE rtrim(referrer, '/')
+				END
+			ORDER BY total DESC
+			LIMIT 10`,
 		})
 	).rows.map((r) => ({
 		referrer: (r.referrer as string) || 'Unknown',
@@ -315,13 +332,8 @@ const handleAnalytics = async (c: Context) => {
 			eventType,
 			eventName,
 			title,
-			slug: slug === '/' ? '/' : slug.endsWith('/') ? slug.slice(0, -1) : slug,
-			referrer:
-				referrer === '/'
-					? '/'
-					: referrer.endsWith('/')
-						? referrer.slice(0, -1)
-						: referrer,
+			slug: removeTrailingSlash(slug),
+			referrer: removeTrailingSlash(referrer),
 			browser,
 			browserVersion,
 			engine,
